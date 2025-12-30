@@ -1,0 +1,21 @@
+﻿using ServiceTokenAPI.Enums;
+
+namespace ServiceTokenAPI.Entities
+{
+    public class ServiceToken
+    {
+        public string Id { get; set; } = null!;
+        public DateTime RowVersion { get; set; }
+        public long CompanyId { get; set; }
+        public long RequestId { get; set; }
+        public long ProdId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public TokenStatus Status { get; set; }
+        public int Count { get; set; }
+        public int TotalCount { get; set; }
+        public ScheduleType ScheduleType { get; set; } = null!;
+        public OwnerType OwnerType { get; set; }
+        public string OwnerPublicKey { get; set; } = string.Empty;
+    }
+}
