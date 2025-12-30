@@ -1,6 +1,6 @@
 ﻿namespace ServiceTokenAPI.Enums
 {
-    public enum TokenStatus : byte
+    public enum ServiceTokenStatus : byte
     {
         Available = 0,
         Sold = 1,

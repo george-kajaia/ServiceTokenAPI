@@ -15,6 +15,6 @@ namespace ServiceTokenAPI.Enums
     public class ScheduleType
     {
         public SchedulePeriodType PeriodType { get; set; }
-        public int PeriodNumber { get; set; }
+        public int? PeriodNumber { get; set; }
     }
 }

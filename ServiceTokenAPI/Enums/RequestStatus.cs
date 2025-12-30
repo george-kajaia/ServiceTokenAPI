@@ -1,4 +1,4 @@
-﻿namespace BondTradingPlatformApi.Enums
+﻿namespace ServiceTokenAPI.Enums
 {
     public enum RequestStatus : byte
     {

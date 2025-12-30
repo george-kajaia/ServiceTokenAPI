@@ -11,7 +11,7 @@ namespace ServiceTokenAPI.Entities
         public long ProdId { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
-        public TokenStatus Status { get; set; }
+        public ServiceTokenStatus Status { get; set; }
         public int Count { get; set; }
         public int TotalCount { get; set; }
         public ScheduleType ScheduleType { get; set; } = null!;
