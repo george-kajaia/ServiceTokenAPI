@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ServiceTokenAPI.Entities;
+using ServiceTokenApi.Entities;
 
-namespace ServiceTokenAPI.Configurations
+namespace ServiceTokenApi.Configurations
 {
     public class InvestorConfiguration : IEntityTypeConfiguration<Investor>
     {

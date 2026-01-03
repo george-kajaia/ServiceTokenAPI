@@ -1,6 +1,6 @@
-﻿using ServiceTokenAPI.Enums;
+﻿using ServiceTokenApi.Enums;
 
-namespace ServiceTokenAPI.Entities
+namespace ServiceTokenApi.Entities
 {
     public class ServiceToken
     {

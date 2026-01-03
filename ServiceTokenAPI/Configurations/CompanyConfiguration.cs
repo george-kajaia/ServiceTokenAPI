@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using ServiceTokenAPI.Entities;
+using ServiceTokenApi.Entities;
 
-namespace ServiceTokenAPI.Configurations
+namespace ServiceTokenApi.Configurations
 {
     public class CompanyConfiguration : IEntityTypeConfiguration<Company>
     {
@@ -11,7 +11,7 @@ namespace ServiceTokenAPI.Configurations
             builder.ToTable("Companies");
             builder.HasKey(x => x.Id);
 
-            builder.HasOne<CompanyUser>()
+            builder.HasOne(x => x.User)
                    .WithOne()
                    .HasForeignKey<CompanyUser>(x => x.CompanyId)
                    .IsRequired()

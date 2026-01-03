@@ -1,4 +1,4 @@
-﻿namespace ServiceTokenAPI.Dto
+﻿namespace ServiceTokenApi.Dto
 {
     public class CompanyRequestDto
     {

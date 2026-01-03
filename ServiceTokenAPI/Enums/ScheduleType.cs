@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace ServiceTokenAPI.Enums
+namespace ServiceTokenApi.Enums
 {
     public enum SchedulePeriodType: int
     {

@@ -1,16 +1,16 @@
-﻿using ServiceTokenAPI.Entities;
-using ServiceTokenAPI.Enums;
+﻿using ServiceTokenApi.Entities;
+using ServiceTokenApi.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using ServiceTokenAPI.DBContext;
+using ServiceTokenApi.DBContext;
 using System.Net.Mime;
-using ServiceTokenAPI.Dto;
+using ServiceTokenApi.Dto;
 
-namespace ServiceTokenAPI.Controllers;
+namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("servicetoken/api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class RequestController(
     ServiceTokenDbContext db,
@@ -18,8 +18,8 @@ public class RequestController(
 {
     private readonly GeneralOptions generalOptions = generalOptions.Value;
 
-    [HttpGet("Get")]
-    public async Task<ActionResult<List<Request>>> Get(int CompanyId = -1, RequestStatus status = RequestStatus.None)
+    [HttpGet("GetAll")]
+    public async Task<ActionResult<List<Request>>> GetAll(int CompanyId = -1, RequestStatus status = RequestStatus.None)
     {
         var c = await db.Requests.AsNoTracking().Where(
             x => (x.CompanyId == CompanyId || CompanyId == -1) &&
@@ -29,30 +29,91 @@ public class RequestController(
         return Ok(c);
     }
 
-    [HttpPost("Create")]
-    public async Task<ActionResult<Request>> Create([FromBody] RequestDto Request)
+    [HttpGet("GetById/{id}")]
+    public async Task<ActionResult<Request>> GetById(long requestId)
     {
-        Request request = new Request
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
+        if (request is null) return NotFound();
+
+        return Ok(request);
+    }
+
+    [HttpPost("Create")]
+    public async Task<ActionResult> Create([FromBody] RequestDto requestDto)
+    {
+        var request = new Request
         {
-            CompanyId = Request.CompanyId,
-            ProdId = Request.ProdId,
+            CompanyId = requestDto.CompanyId,
+            ProdId = requestDto.ProdId,
             RegDate = DateTime.UtcNow,
-            Status = RequestStatus.Created,
-            TotalCount = Request.TotalCount,
-            Price = Request.Price
-};
+            Status = RequestStatus.Created
+        };
 
         await db.Requests.AddAsync(request);
 
         await db.SaveChangesAsync();
 
-        return Ok(request);
+        return Ok();
+    }
+
+    [HttpPut("Update")]
+    public async Task<ActionResult> Update(int requestId, [FromBody] RequestDto requestDto)
+    {
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
+        if (request is null) return NotFound();
+
+        request.ProdId = requestDto.ProdId;
+
+        await db.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpDelete("Delete")]
+    public async Task<IActionResult> Delete(int requestId)
+    {
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
+        if (request is null) return NotFound();
+
+        db.Requests.Remove(request);
+
+        await db.SaveChangesAsync();
+        
+        return NoContent();
+    }
+
+    [HttpPost("Authorize")]
+    public async Task<ActionResult> Authorize(int requestId)
+    {
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Created);
+        if (request is null) return NotFound();
+
+        request.Status = RequestStatus.Authorised;
+        request.AuthorizeDate = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+
+        return Ok();
+    }
+
+    [HttpPost("Deauthorize")]
+    public async Task<ActionResult> Deauthorize(int requestId)
+    {
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
+        if (request is null) return NotFound();
+
+        request.Status = RequestStatus.Created;
+        request.AuthorizeDate = null;
+
+        await db.SaveChangesAsync();
+
+        return Ok();
     }
 
     [HttpPost("Approve")]
-    public async Task<ActionResult<Request>> Approve(int requestId)
+    public async Task<ActionResult> Approve(int requestId)
     {
-        var Request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Created);
+        var Request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
         if (Request is null) return NotFound();
 
         Request.Status = RequestStatus.Approved;
@@ -65,7 +126,7 @@ public class RequestController(
         List<ServiceToken> serviceTokens = new List<ServiceToken>();
         List<Operation> serviceTokenOperations = new List<Operation>();
 
-        for (int i = 0; i < Request.TotalCount; i++)
+        for (int i = 0; i < product.TotalCount; i++)
         {
             serviceTokens.Add(
                 new ServiceToken
@@ -79,7 +140,7 @@ public class RequestController(
                     EndDate = null,
                     Status = ServiceTokenStatus.Available,
                     Count = 0,
-                    TotalCount = Request.TotalCount,
+                    TotalCount = product.TotalCount,
                     ScheduleType = product.ScheduleType,                    
 
                     OwnerType = OwnerType.Company,

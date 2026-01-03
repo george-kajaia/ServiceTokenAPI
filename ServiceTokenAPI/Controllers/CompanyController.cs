@@ -1,14 +1,14 @@
-﻿using ServiceTokenAPI.Entities;
+﻿using ServiceTokenApi.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ServiceTokenAPI.DBContext;
+using ServiceTokenApi.DBContext;
 using System.Net.Mime;
-using ServiceTokenAPI.Dto;
+using ServiceTokenApi.Dto;
 
-namespace ServiceTokenAPI.Controllers;
+namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("servicetoken/api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class CompanyController(ServiceTokenDbContext db) : ControllerBase
 {
@@ -74,13 +74,11 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
             Name = Company.Name.Trim(),
             Status = 0,
             RegDate = DateTime.UtcNow,
-            TaxCode = Company.TaxCode.Trim()
+            TaxCode = Company.TaxCode.Trim(),
+            User = new CompanyUser { UserName = Company.UserName, Password = hash }
         };
 
-        var companyUser = new CompanyUser { UserName = Company.UserName, Password = hash };
-
         db.Companies.Add(company);
-        db.CompanyUsers.Add(companyUser);
         try
         {
             await db.SaveChangesAsync();

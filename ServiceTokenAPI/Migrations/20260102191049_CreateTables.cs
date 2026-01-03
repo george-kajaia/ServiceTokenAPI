@@ -4,10 +4,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace ServiceTokenAPI.Migrations
+namespace ServiceTokenApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddTables : Migration
+    public partial class CreateTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -21,8 +21,7 @@ namespace ServiceTokenAPI.Migrations
                     Name = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    TaxCode = table.Column<string>(type: "text", nullable: false),
-                    PublicKey = table.Column<string>(type: "text", nullable: true)
+                    TaxCode = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -52,11 +51,11 @@ namespace ServiceTokenAPI.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    TotalQuantity = table.Column<int>(type: "integer", nullable: false),
+                    TotalCount = table.Column<int>(type: "integer", nullable: false),
                     Price = table.Column<decimal>(type: "numeric", nullable: false),
                     Term = table.Column<int>(type: "integer", nullable: true),
                     ScheduleType_PeriodType = table.Column<int>(type: "integer", nullable: false),
-                    ScheduleType_PeriodNumber = table.Column<int>(type: "integer", nullable: false)
+                    ScheduleType_PeriodNumber = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -69,12 +68,12 @@ namespace ServiceTokenAPI.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    RowVersion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     ProdId = table.Column<long>(type: "bigint", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
-                    TotalCount = table.Column<int>(type: "integer", nullable: false),
-                    Price = table.Column<decimal>(type: "numeric", nullable: false),
+                    AuthorizeDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     ApproveDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
@@ -97,7 +96,7 @@ namespace ServiceTokenAPI.Migrations
                     Count = table.Column<int>(type: "integer", nullable: false),
                     TotalCount = table.Column<int>(type: "integer", nullable: false),
                     ScheduleType_PeriodType = table.Column<int>(type: "integer", nullable: false),
-                    ScheduleType_PeriodNumber = table.Column<int>(type: "integer", nullable: false),
+                    ScheduleType_PeriodNumber = table.Column<int>(type: "integer", nullable: true),
                     OwnerType = table.Column<byte>(type: "smallint", nullable: false),
                     OwnerPublicKey = table.Column<string>(type: "text", nullable: false)
                 },

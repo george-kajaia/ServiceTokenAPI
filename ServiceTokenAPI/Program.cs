@@ -1,4 +1,4 @@
-using ServiceTokenAPI.DBContext;
+using ServiceTokenApi.DBContext;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,7 +8,7 @@ builder.Services.AddDbContext<ServiceTokenDbContext>(opt =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen(); // This will now resolve
 
 var app = builder.Build();
 
@@ -18,10 +18,8 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
-//if (app.Environment.IsDevelopment())
-//{
-    app.MapOpenApi();
-//}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

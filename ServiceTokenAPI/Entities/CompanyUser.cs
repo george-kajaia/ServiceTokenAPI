@@ -1,4 +1,4 @@
-﻿namespace ServiceTokenAPI.Entities
+﻿namespace ServiceTokenApi.Entities
 {
     public class CompanyUser
     {

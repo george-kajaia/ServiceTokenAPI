@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using ServiceTokenAPI.DBContext;
+using ServiceTokenApi.DBContext;
 
 #nullable disable
 
-namespace ServiceTokenAPI.Migrations
+namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
     partial class ServiceTokenDbContextModelSnapshot : ModelSnapshot
@@ -22,7 +22,7 @@ namespace ServiceTokenAPI.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Company", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Company", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -32,9 +32,6 @@ namespace ServiceTokenAPI.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("PublicKey")
                         .HasColumnType("text");
 
                     b.Property<DateTime>("RegDate")
@@ -52,7 +49,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("Companies", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.CompanyUser", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.CompanyUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -81,7 +78,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("CompanyUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Investor", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Investor", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -106,7 +103,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("Investors", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Operation", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Operation", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -135,7 +132,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("Operations", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Product", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Product", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -156,7 +153,7 @@ namespace ServiceTokenAPI.Migrations
                     b.Property<int?>("Term")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TotalQuantity")
+                    b.Property<int>("TotalCount")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -164,7 +161,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Request", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Request", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -175,11 +172,11 @@ namespace ServiceTokenAPI.Migrations
                     b.Property<DateTime?>("ApproveDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("AuthorizeDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<long>("CompanyId")
                         .HasColumnType("bigint");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
 
                     b.Property<long>("ProdId")
                         .HasColumnType("bigint");
@@ -187,18 +184,18 @@ namespace ServiceTokenAPI.Migrations
                     b.Property<DateTime>("RegDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime>("RowVersion")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
-
-                    b.Property<int>("TotalCount")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.ToTable("Requests", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.ServiceToken", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.ServiceToken", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -248,7 +245,7 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("ServiceTokens", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.User", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -273,32 +270,32 @@ namespace ServiceTokenAPI.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.CompanyUser", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.CompanyUser", b =>
                 {
-                    b.HasOne("ServiceTokenAPI.Entities.Company", null)
-                        .WithOne()
-                        .HasForeignKey("ServiceTokenAPI.Entities.CompanyUser", "CompanyId")
+                    b.HasOne("ServiceTokenApi.Entities.Company", null)
+                        .WithOne("User")
+                        .HasForeignKey("ServiceTokenApi.Entities.CompanyUser", "CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Operation", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Operation", b =>
                 {
-                    b.HasOne("ServiceTokenAPI.Entities.ServiceToken", null)
+                    b.HasOne("ServiceTokenApi.Entities.ServiceToken", null)
                         .WithMany()
                         .HasForeignKey("ServiceTokenId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.Product", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.Product", b =>
                 {
-                    b.OwnsOne("ServiceTokenAPI.Enums.ScheduleType", "ScheduleType", b1 =>
+                    b.OwnsOne("ServiceTokenApi.Enums.ScheduleType", "ScheduleType", b1 =>
                         {
                             b1.Property<long>("ProductId")
                                 .HasColumnType("bigint");
 
-                            b1.Property<int>("PeriodNumber")
+                            b1.Property<int?>("PeriodNumber")
                                 .HasColumnType("integer");
 
                             b1.Property<int>("PeriodType")
@@ -316,14 +313,14 @@ namespace ServiceTokenAPI.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ServiceTokenAPI.Entities.ServiceToken", b =>
+            modelBuilder.Entity("ServiceTokenApi.Entities.ServiceToken", b =>
                 {
-                    b.OwnsOne("ServiceTokenAPI.Enums.ScheduleType", "ScheduleType", b1 =>
+                    b.OwnsOne("ServiceTokenApi.Enums.ScheduleType", "ScheduleType", b1 =>
                         {
                             b1.Property<string>("ServiceTokenId")
                                 .HasColumnType("text");
 
-                            b1.Property<int>("PeriodNumber")
+                            b1.Property<int?>("PeriodNumber")
                                 .HasColumnType("integer");
 
                             b1.Property<int>("PeriodType")
@@ -339,6 +336,11 @@ namespace ServiceTokenAPI.Migrations
 
                     b.Navigation("ScheduleType")
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("ServiceTokenApi.Entities.Company", b =>
+                {
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

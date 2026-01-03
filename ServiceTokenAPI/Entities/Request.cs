@@ -1,6 +1,6 @@
-﻿using ServiceTokenAPI.Enums;
+﻿using ServiceTokenApi.Enums;
 
-namespace ServiceTokenAPI.Entities
+namespace ServiceTokenApi.Entities
 {
     public class Request
     {
@@ -9,9 +9,8 @@ namespace ServiceTokenAPI.Entities
         public long CompanyId { get; set; }
         public long ProdId { get; set; }
         public DateTime RegDate { get; set; }
-        public RequestStatus Status { get; set; }
-        public int TotalCount { get; set; }
-        public decimal Price { get; set; }        
-        public DateTime? ApproveDate { get; set; }        
+        public RequestStatus Status { get; set; }       
+        public DateTime? AuthorizeDate { get; set; }
+        public DateTime? ApproveDate { get; set; }
     }
 }

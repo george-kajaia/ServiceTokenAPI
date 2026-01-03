@@ -1,4 +1,4 @@
-﻿namespace ServiceTokenAPI.Enums
+﻿namespace ServiceTokenApi.Enums
 {
     public enum OwnerType : byte
     {

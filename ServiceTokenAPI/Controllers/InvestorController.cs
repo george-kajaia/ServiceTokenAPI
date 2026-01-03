@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using ServiceTokenAPI.DBContext;
-using ServiceTokenAPI.Dto;
-using ServiceTokenAPI.Entities;
+using ServiceTokenApi.DBContext;
+using ServiceTokenApi.Dto;
+using ServiceTokenApi.Entities;
 using System.Net.Mime;
 
-namespace ServiceTokenAPI.Controllers;
+namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("servicetoken/api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class InvestorController(ServiceTokenDbContext db) : ControllerBase
 {

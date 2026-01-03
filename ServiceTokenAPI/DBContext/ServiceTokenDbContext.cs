@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using ServiceTokenAPI.Entities;
+using ServiceTokenApi.Entities;
 using System.Reflection;
 
-namespace ServiceTokenAPI.DBContext
+namespace ServiceTokenApi.DBContext
 {
     public class ServiceTokenDbContext(DbContextOptions<ServiceTokenDbContext> options) : DbContext(options)
     {
