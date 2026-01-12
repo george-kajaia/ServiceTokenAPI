@@ -66,11 +66,11 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
         var product = await db.Products.FirstOrDefaultAsync(x => x.Id == prodId);
         if (product is null) return NotFound();
 
-        product.Name = product.Name;
-        product.TotalCount = product.TotalCount;
-        product.Price = product.Price;
-        product.Term = product.Term;
-        product.ScheduleType = product.ScheduleType;
+        product.Name = newProduct.Name;
+        product.TotalCount = newProduct.TotalCount;
+        product.Price = newProduct.Price;
+        product.Term = newProduct.Term;
+        product.ScheduleType = newProduct.ScheduleType;
 
         await db.SaveChangesAsync();
         return Ok();

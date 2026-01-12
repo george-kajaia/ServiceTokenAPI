@@ -44,6 +44,7 @@ public class RequestController(
         var request = new Request
         {
             CompanyId = requestDto.CompanyId,
+            RowVersion = DateTime.UtcNow,
             ProdId = requestDto.ProdId,
             RegDate = DateTime.UtcNow,
             Status = RequestStatus.Created
@@ -140,9 +141,12 @@ public class RequestController(
                     EndDate = null,
                     Status = ServiceTokenStatus.Available,
                     Count = 0,
-                    TotalCount = product.TotalCount,
-                    ScheduleType = product.ScheduleType,                    
-
+                    TotalCount = product.TotalCount,                    
+                    ScheduleType = new ScheduleType
+                    {
+                        PeriodType = product.ScheduleType.PeriodType,
+                        PeriodNumber = product.ScheduleType.PeriodNumber
+                    },
                     OwnerType = OwnerType.Company,
                     OwnerPublicKey = platformPublicKey
                 }
