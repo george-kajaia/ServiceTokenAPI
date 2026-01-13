@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ServiceTokenApi.DBContext;
@@ -11,9 +12,11 @@ using ServiceTokenApi.DBContext;
 namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
-    partial class ServiceTokenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260113184450_AddTables")]
+    partial class AddTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -187,11 +190,11 @@ namespace ServiceTokenApi.Migrations
                     b.Property<DateTime>("RowVersion")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("ServiceTokenCount")
-                        .HasColumnType("integer");
-
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
+
+                    b.Property<int>("TokenCount")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

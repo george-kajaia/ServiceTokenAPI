@@ -4,6 +4,7 @@
     {
         public long CompanyId { get; set; }
         public long ProdId { get; set; }
+        public int ServiceTokenCount { get; set; }
     }
 
 }

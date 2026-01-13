@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ServiceTokenApi.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateTables : Migration
+    public partial class AddTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -51,7 +51,7 @@ namespace ServiceTokenApi.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    TotalCount = table.Column<int>(type: "integer", nullable: false),
+                    ServiceCount = table.Column<int>(type: "integer", nullable: false),
                     Price = table.Column<decimal>(type: "numeric", nullable: false),
                     Term = table.Column<int>(type: "integer", nullable: true),
                     ScheduleType_PeriodType = table.Column<int>(type: "integer", nullable: false),
@@ -71,6 +71,7 @@ namespace ServiceTokenApi.Migrations
                     RowVersion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     ProdId = table.Column<long>(type: "bigint", nullable: false),
+                    TokenCount = table.Column<int>(type: "integer", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
                     AuthorizeDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -94,7 +95,7 @@ namespace ServiceTokenApi.Migrations
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
                     Count = table.Column<int>(type: "integer", nullable: false),
-                    TotalCount = table.Column<int>(type: "integer", nullable: false),
+                    ServiceCount = table.Column<int>(type: "integer", nullable: false),
                     ScheduleType_PeriodType = table.Column<int>(type: "integer", nullable: false),
                     ScheduleType_PeriodNumber = table.Column<int>(type: "integer", nullable: true),
                     OwnerType = table.Column<byte>(type: "smallint", nullable: false),

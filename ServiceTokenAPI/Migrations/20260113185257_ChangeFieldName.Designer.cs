@@ -12,8 +12,8 @@ using ServiceTokenApi.DBContext;
 namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
-    [Migration("20260102191049_CreateTables")]
-    partial class CreateTables
+    [Migration("20260113185257_ChangeFieldName")]
+    partial class ChangeFieldName
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -153,10 +153,10 @@ namespace ServiceTokenApi.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
 
-                    b.Property<int?>("Term")
+                    b.Property<int>("ServiceCount")
                         .HasColumnType("integer");
 
-                    b.Property<int>("TotalCount")
+                    b.Property<int?>("Term")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
@@ -189,6 +189,9 @@ namespace ServiceTokenApi.Migrations
 
                     b.Property<DateTime>("RowVersion")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ServiceTokenCount")
+                        .HasColumnType("integer");
 
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
@@ -228,14 +231,14 @@ namespace ServiceTokenApi.Migrations
                     b.Property<DateTime>("RowVersion")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("ServiceCount")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
-
-                    b.Property<int>("TotalCount")
-                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 

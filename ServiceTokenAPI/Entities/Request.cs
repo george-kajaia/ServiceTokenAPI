@@ -8,6 +8,7 @@ namespace ServiceTokenApi.Entities
         public DateTime RowVersion { get; set; }
         public long CompanyId { get; set; }
         public long ProdId { get; set; }
+        public  int ServiceTokenCount { get; set; }
         public DateTime RegDate { get; set; }
         public RequestStatus Status { get; set; }       
         public DateTime? AuthorizeDate { get; set; }

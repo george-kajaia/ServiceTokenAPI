@@ -13,7 +13,7 @@ namespace ServiceTokenApi.Entities
         public DateTime? EndDate { get; set; }
         public ServiceTokenStatus Status { get; set; }
         public int Count { get; set; }
-        public int TotalCount { get; set; }
+        public int ServiceCount { get; set; }
         public ScheduleType ScheduleType { get; set; } = null!;
         public OwnerType OwnerType { get; set; }
         public string OwnerPublicKey { get; set; } = string.Empty;

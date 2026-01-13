@@ -46,6 +46,7 @@ public class RequestController(
             CompanyId = requestDto.CompanyId,
             RowVersion = DateTime.UtcNow,
             ProdId = requestDto.ProdId,
+            ServiceTokenCount = requestDto.ServiceTokenCount,
             RegDate = DateTime.UtcNow,
             Status = RequestStatus.Created
         };
@@ -114,41 +115,41 @@ public class RequestController(
     [HttpPost("Approve")]
     public async Task<ActionResult> Approve(int requestId)
     {
-        var Request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
-        if (Request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
+        if (request is null) return NotFound();
 
-        Request.Status = RequestStatus.Approved;
-        Request.ApproveDate = DateTime.UtcNow;
+        request.Status = RequestStatus.Approved;
+        request.ApproveDate = DateTime.UtcNow;
 
-        var product = await db.Products.AsNoTracking().Where(x => x.Id == Request.ProdId).SingleAsync();
-
-        var platformPublicKey = "";
+        var product = await db.Products.AsNoTracking().Where(x => x.Id == request.ProdId).SingleAsync();
 
         List<ServiceToken> serviceTokens = new List<ServiceToken>();
         List<Operation> serviceTokenOperations = new List<Operation>();
 
-        for (int i = 0; i < product.TotalCount; i++)
+        var platformPublicKey = generalOptions.PlatformAccount;
+
+        for (int i = 0; i < request.ServiceTokenCount; i++)
         {
             serviceTokens.Add(
                 new ServiceToken
                 {
                     Id = Guid.NewGuid().ToString(),
                     RowVersion = DateTime.UtcNow,
-                    CompanyId = Request.CompanyId,
-                    RequestId = Request.Id,
-                    ProdId = Request.ProdId,
+                    CompanyId = request.CompanyId,
+                    RequestId = request.Id,
+                    ProdId = request.ProdId,
                     StartDate = DateTime.UtcNow,
                     EndDate = null,
                     Status = ServiceTokenStatus.Available,
                     Count = 0,
-                    TotalCount = product.TotalCount,                    
+                    ServiceCount = product.ServiceCount,
                     ScheduleType = new ScheduleType
                     {
                         PeriodType = product.ScheduleType.PeriodType,
                         PeriodNumber = product.ScheduleType.PeriodNumber
                     },
                     OwnerType = OwnerType.Company,
-                    OwnerPublicKey = platformPublicKey
+                    OwnerPublicKey = platformPublicKey,
                 }
                 );
 
@@ -170,7 +171,7 @@ public class RequestController(
 
         await db.SaveChangesAsync();
 
-        return Ok(Request);
+        return Ok();
     }
 
     /*

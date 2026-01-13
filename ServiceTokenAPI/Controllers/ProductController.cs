@@ -67,7 +67,7 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
         if (product is null) return NotFound();
 
         product.Name = newProduct.Name;
-        product.TotalCount = newProduct.TotalCount;
+        product.ServiceCount = newProduct.ServiceCount;        
         product.Price = newProduct.Price;
         product.Term = newProduct.Term;
         product.ScheduleType = newProduct.ScheduleType;
