@@ -11,6 +11,8 @@ namespace ServiceTokenApi.Configurations
             builder.ToTable("Companies");
             builder.HasKey(x => x.Id);
 
+            builder.Property(x => x.RowVersion).IsRowVersion();
+
             builder.HasOne(x => x.User)
                    .WithOne()
                    .HasForeignKey<CompanyUser>(x => x.CompanyId)

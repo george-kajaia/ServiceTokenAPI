@@ -2,8 +2,8 @@
 {
     public enum ServiceTokenStatus : byte
     {
-        Available = 0,
-        Sold = 1,
-        Finished = 255
+        Available = 0,  // for sell
+        Sold = 1,       // Sold and have an owner
+        Finished = 255  // Not serviced
     }
 }

@@ -1,11 +1,13 @@
-﻿using ServiceTokenApi.Entities;
-using ServiceTokenApi.Enums;
+﻿using System.Data;
+using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.VisualBasic;
 using ServiceTokenApi.DBContext;
-using System.Net.Mime;
 using ServiceTokenApi.Dto;
+using ServiceTokenApi.Entities;
+using ServiceTokenApi.Enums;
 
 namespace ServiceTokenApi.Controllers;
 
@@ -59,11 +61,12 @@ public class RequestController(
     }
 
     [HttpPut("Update")]
-    public async Task<ActionResult> Update(int requestId, [FromBody] RequestDto requestDto)
+    public async Task<ActionResult> Update(int requestId, DateTime rowVersion, [FromBody] RequestDto requestDto)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
-        if (request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record is changed. Refresh the Data.");
 
+        request.RowVersion = DateTime.UtcNow;
         request.ProdId = requestDto.ProdId;
 
         await db.SaveChangesAsync();
@@ -85,11 +88,12 @@ public class RequestController(
     }
 
     [HttpPost("Authorize")]
-    public async Task<ActionResult> Authorize(int requestId)
+    public async Task<ActionResult> Authorize(int requestId, DateTime rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Created);
-        if (request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Created && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record is changed. Refresh the Data.");
 
+        request.RowVersion = DateTime.UtcNow;
         request.Status = RequestStatus.Authorised;
         request.AuthorizeDate = DateTime.UtcNow;
 
@@ -99,11 +103,12 @@ public class RequestController(
     }
 
     [HttpPost("Deauthorize")]
-    public async Task<ActionResult> Deauthorize(int requestId)
+    public async Task<ActionResult> Deauthorize(int requestId, DateTime rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
-        if (request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record is changed. Refresh the Data.");
 
+        request.RowVersion = DateTime.UtcNow;
         request.Status = RequestStatus.Created;
         request.AuthorizeDate = null;
 
@@ -113,11 +118,12 @@ public class RequestController(
     }
 
     [HttpPost("Approve")]
-    public async Task<ActionResult> Approve(int requestId)
+    public async Task<ActionResult> Approve(int requestId, DateTime rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised);
-        if (request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record is changed. Refresh the Data.");
 
+        request.RowVersion = DateTime.UtcNow;
         request.Status = RequestStatus.Approved;
         request.ApproveDate = DateTime.UtcNow;
 

@@ -90,11 +90,13 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPut("update")]
-    public async Task<ActionResult<Investor>> Update(int id, [FromBody] Investor investor)
+    public async Task<ActionResult<Investor>> Update(int id, DateTime rowVersion, [FromBody] Investor investor)
     {
-        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == id);
-        if (c is null) return NotFound();
+        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == id && x.RowVersion == rowVersion);
+        if (c is null) return NotFound("The record is changed. Refresh the Data.");
 
+        c.RowVersion = DateTime.UtcNow;
+        c.Status = 0;
         c.PublicKey = investor.PublicKey.Trim();
         c.UserName = investor.UserName.Trim();
 
@@ -116,10 +118,13 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPatch("Approve")]
-    public async Task<ActionResult<Investor>> Approve(int investorId)
+    public async Task<ActionResult<Investor>> Approve(int investorId, DateTime rowVersion)
     {
-        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId);
-        if (c is null) return NotFound();
+        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId && x.RowVersion == rowVersion);
+        if (c is null) return NotFound("The record is changed. Refresh the Data.");
+
+        c.RowVersion = rowVersion;
+        c.Status = 1;
 
         await db.SaveChangesAsync();
 
