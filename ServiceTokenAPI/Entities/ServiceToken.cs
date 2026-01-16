@@ -1,11 +1,13 @@
-﻿using ServiceTokenApi.Enums;
+﻿using System.ComponentModel.DataAnnotations;
+using ServiceTokenApi.Enums;
 
 namespace ServiceTokenApi.Entities
 {
     public class ServiceToken
     {
         public string Id { get; set; } = null!;
-        public DateTime RowVersion { get; set; }
+        [Timestamp]
+        public uint RowVersion { get; set; }
         public long CompanyId { get; set; }
         public long RequestId { get; set; }
         public long ProdId { get; set; }

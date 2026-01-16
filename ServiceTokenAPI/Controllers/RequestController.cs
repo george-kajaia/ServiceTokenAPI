@@ -46,7 +46,6 @@ public class RequestController(
         var request = new Request
         {
             CompanyId = requestDto.CompanyId,
-            RowVersion = DateTime.UtcNow,
             ProdId = requestDto.ProdId,
             ServiceTokenCount = requestDto.ServiceTokenCount,
             RegDate = DateTime.UtcNow,
@@ -61,69 +60,103 @@ public class RequestController(
     }
 
     [HttpPut("Update")]
-    public async Task<ActionResult> Update(int requestId, DateTime rowVersion, [FromBody] RequestDto requestDto)
+    public async Task<ActionResult> Update(int requestId, uint rowVersion, [FromBody] RequestDto requestDto)
     {
         var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
-        if (request is null) return NotFound("The record is changed. Refresh the Data.");
+        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
 
-        request.RowVersion = DateTime.UtcNow;
+        db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         request.ProdId = requestDto.ProdId;
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
-        return Ok();
+        return Ok(request);
     }
 
     [HttpDelete("Delete")]
-    public async Task<IActionResult> Delete(int requestId)
+    public async Task<IActionResult> Delete(int requestId, uint rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
-        if (request is null) return NotFound();
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
+
+        db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         db.Requests.Remove(request);
 
-        await db.SaveChangesAsync();
-        
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
         return NoContent();
     }
 
     [HttpPost("Authorize")]
-    public async Task<ActionResult> Authorize(int requestId, DateTime rowVersion)
+    public async Task<IActionResult> Authorize(int requestId, uint rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Created && x.RowVersion == rowVersion);
-        if (request is null) return NotFound("The record is changed. Refresh the Data.");
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
 
-        request.RowVersion = DateTime.UtcNow;
+        db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         request.Status = RequestStatus.Authorised;
         request.AuthorizeDate = DateTime.UtcNow;
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
 
     [HttpPost("Deauthorize")]
-    public async Task<ActionResult> Deauthorize(int requestId, DateTime rowVersion)
+    public async Task<IActionResult> Deauthorize(int requestId, uint rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised && x.RowVersion == rowVersion);
-        if (request is null) return NotFound("The record is changed. Refresh the Data.");
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
 
-        request.RowVersion = DateTime.UtcNow;
+        db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         request.Status = RequestStatus.Created;
         request.AuthorizeDate = null;
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
 
     [HttpPost("Approve")]
-    public async Task<ActionResult> Approve(int requestId, DateTime rowVersion)
+    public async Task<IActionResult> Approve(int requestId, uint rowVersion)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.Status == RequestStatus.Authorised && x.RowVersion == rowVersion);
-        if (request is null) return NotFound("The record is changed. Refresh the Data.");
+        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
+        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
 
-        request.RowVersion = DateTime.UtcNow;
+        db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         request.Status = RequestStatus.Approved;
         request.ApproveDate = DateTime.UtcNow;
 
@@ -140,7 +173,6 @@ public class RequestController(
                 new ServiceToken
                 {
                     Id = Guid.NewGuid().ToString(),
-                    RowVersion = DateTime.UtcNow,
                     CompanyId = request.CompanyId,
                     RequestId = request.Id,
                     ProdId = request.ProdId,
@@ -175,23 +207,15 @@ public class RequestController(
 
         await db.Operations.AddRangeAsync(serviceTokenOperations);
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
-
-    /*
-    [HttpDelete("Delete")]
-    public async Task<IActionResult> Delete(int requestId)
-    {
-        var c = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
-        if (c is null) return NotFound();
-
-        db.Requests.Remove(c);
-        
-        await db.SaveChangesAsync();
-
-        return NoContent();
-    }
-    */
 }

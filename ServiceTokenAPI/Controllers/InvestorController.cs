@@ -90,12 +90,13 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPut("update")]
-    public async Task<ActionResult<Investor>> Update(int id, DateTime rowVersion, [FromBody] Investor investor)
+    public async Task<ActionResult<Investor>> Update(int investorId, uint rowVersion, [FromBody] Investor investor)
     {
-        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == id && x.RowVersion == rowVersion);
-        if (c is null) return NotFound("The record is changed. Refresh the Data.");
+        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId && x.RowVersion == rowVersion);
+        if (c is null) return NotFound("The record was changed by another user. Refresh the Data.");
 
-        c.RowVersion = DateTime.UtcNow;
+        db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         c.Status = 0;
         c.PublicKey = investor.PublicKey.Trim();
         c.UserName = investor.UserName.Trim();
@@ -109,6 +110,10 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
         {
             await db.SaveChangesAsync();
         }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
         catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("duplicate") == true)
         {
             return Conflict("UserName (or another unique field) already exists.");
@@ -118,27 +123,46 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPatch("Approve")]
-    public async Task<ActionResult<Investor>> Approve(int investorId, DateTime rowVersion)
+    public async Task<IActionResult> Approve(int investorId, uint rowVersion)
     {
         var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId && x.RowVersion == rowVersion);
-        if (c is null) return NotFound("The record is changed. Refresh the Data.");
+        if (c is null) return NotFound("The record was changed by another user. Refresh the Data.");
 
-        c.RowVersion = rowVersion;
+        db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
         c.Status = 1;
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
-        return Ok(c);
+        return Ok();
     }
 
     [HttpDelete("delete")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete(int investorId, uint rowVersion)
     {
-        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == id);
-        if (c is null) return NotFound();
+        var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId && x.RowVersion == rowVersion);
+        if (c is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         db.Investors.Remove(c);
-        await db.SaveChangesAsync();
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
         return NoContent();
     }
 }

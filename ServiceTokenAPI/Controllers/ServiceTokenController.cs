@@ -118,18 +118,19 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPost("BuyPrimaryServiceToken")]
-    public async Task<ActionResult> BuyPrimaryServiceToken(string serviceTokenId, DateTime rowVersion, string investorPublicKey)
+    public async Task<ActionResult> BuyPrimaryServiceToken(string serviceTokenId, uint rowVersion, string investorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
-        if (serviceToken is null) return NotFound("The record is changed. Refresh the Data.");
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         var term = (await db.Products.Where(x => x.Id == serviceToken.ProdId).Select(x => x.Term).SingleAsync()).GetValueOrDefault();
 
         var startDate = DateTime.UtcNow.Date;
         var endDate = DateTime.UtcNow.Date.AddMonths(term);
 
-        serviceToken.RowVersion = DateTime.UtcNow;
         serviceToken.Status = ServiceTokenStatus.Sold;
         serviceToken.StartDate = startDate;
         serviceToken.EndDate = endDate;
@@ -147,17 +148,26 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
         db.ServiceTokens.Update(serviceToken);
         db.Operations.Add(operation);
 
-        await db.SaveChangesAsync();
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
 
     [HttpPost("MarkServiceTokenForResell")]
-    public async Task<ActionResult> MarkServiceTokenForResell(string serviceTokenId, DateTime rowVersion)
+    public async Task<ActionResult> MarkServiceTokenForResell(string serviceTokenId, uint rowVersion)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Sold);
-        if (serviceToken is null) return NotFound("The record is changed. Refresh the Data.");
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         serviceToken.Status = ServiceTokenStatus.Available;
 
@@ -170,17 +180,27 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 
         db.ServiceTokens.Update(serviceToken);
         db.Operations.Add(operation);
-        await db.SaveChangesAsync();
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
 
     [HttpPost("CancelReselling")]
-    public async Task<ActionResult> CancelReselling(string serviceTokenId, DateTime rowVersion)
+    public async Task<ActionResult> CancelReselling(string serviceTokenId, uint rowVersion)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
-        if (serviceToken is null) return NotFound("The record is changed. Refresh the Data.");
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         serviceToken.Status = ServiceTokenStatus.Sold;
 
@@ -194,13 +214,21 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 
         db.ServiceTokens.Update(serviceToken);
         db.Operations.Add(operation);
-        await db.SaveChangesAsync();
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }
 
     [HttpPost("BuySecondaryServiceToken")]
-    public async Task<ActionResult> BuySecondaryServiceToken(string serviceTokenId, DateTime rowVersion, string newInvestorPublicKey)
+    public async Task<ActionResult> BuySecondaryServiceToken(string serviceTokenId, uint rowVersion, string newInvestorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking().FirstOrDefaultAsync(x => 
         x.Id == serviceTokenId && 
@@ -208,8 +236,9 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
         x.Status == ServiceTokenStatus.Available &&
         x.OwnerType == OwnerType.Investor &&
         x.OwnerPublicKey != newInvestorPublicKey);
-        if (serviceToken is null) return NotFound("The record is changed. Refresh the Data.");
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
 
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         serviceToken.Status = ServiceTokenStatus.Sold;
         serviceToken.OwnerPublicKey = newInvestorPublicKey;
@@ -224,7 +253,15 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 
         db.ServiceTokens.Update(serviceToken);
         db.Operations.Add(operation);
-        await db.SaveChangesAsync();
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
 
         return Ok();
     }

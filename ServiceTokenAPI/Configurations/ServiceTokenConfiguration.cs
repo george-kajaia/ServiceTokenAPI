@@ -13,6 +13,7 @@ namespace ServiceTokenApi.Configurations
             builder.HasIndex(x => x.CompanyId).IsUnique(false);
             builder.HasIndex(x => x.RequestId).IsUnique(false);
             builder.HasIndex(x => x.ProdId).IsUnique(false);
+            builder.Property(x => x.RowVersion).IsRowVersion();
         }
     }
 }

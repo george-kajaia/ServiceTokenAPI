@@ -10,6 +10,7 @@ namespace ServiceTokenApi.Configurations
         {
             builder.ToTable("Investors");
             builder.HasKey(item => item.Id);
+            builder.Property(x => x.RowVersion).IsRowVersion();
         }
     }
 }

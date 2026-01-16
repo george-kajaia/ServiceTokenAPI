@@ -9,7 +9,8 @@ namespace ServiceTokenApi.Configurations
         public void Configure(EntityTypeBuilder<Request> builder)
         {
             builder.ToTable("Requests");
-            builder.HasKey(item => item.Id);
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.RowVersion).IsRowVersion();
         }
     }
 }

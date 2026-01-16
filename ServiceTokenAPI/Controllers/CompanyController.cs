@@ -119,7 +119,7 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPatch("Approve")]
-    public async Task<ActionResult> Approve(int companyId, uint rowVersion)
+    public async Task<IActionResult> Approve(int companyId, uint rowVersion)
     {
         var c = await db.Companies.FirstOrDefaultAsync(x => x.Id == companyId && x.RowVersion == rowVersion);
         if (c is null) return NotFound("The record was changed by another user. Refresh the data.");
