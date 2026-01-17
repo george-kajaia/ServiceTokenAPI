@@ -148,7 +148,7 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int investorId, uint rowVersion)
     {
         var c = await db.Investors.FirstOrDefaultAsync(x => x.Id == investorId && x.RowVersion == rowVersion);
-        if (c is null) return NotFound("The record was changed by another user. Refresh the Data.");
+        if (c is null) return NotFound("Record not found or already deleted.");
 
         db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
@@ -160,7 +160,7 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            return Conflict("The record was changed by another user. Refresh the data.");
+            return Conflict("Record not found or already deleted.");
         }
 
         return NoContent();

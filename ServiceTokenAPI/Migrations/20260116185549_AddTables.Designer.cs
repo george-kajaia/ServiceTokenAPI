@@ -12,8 +12,8 @@ using ServiceTokenApi.DBContext;
 namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
-    [Migration("20260113185257_ChangeFieldName")]
-    partial class ChangeFieldName
+    [Migration("20260116185549_AddTables")]
+    partial class AddTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,12 @@ namespace ServiceTokenApi.Migrations
 
                     b.Property<DateTime>("RegDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
@@ -96,6 +102,15 @@ namespace ServiceTokenApi.Migrations
                     b.Property<string>("PublicKey")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -187,8 +202,11 @@ namespace ServiceTokenApi.Migrations
                     b.Property<DateTime>("RegDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("RowVersion")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<int>("ServiceTokenCount")
                         .HasColumnType("integer");
@@ -228,8 +246,11 @@ namespace ServiceTokenApi.Migrations
                     b.Property<long>("RequestId")
                         .HasColumnType("bigint");
 
-                    b.Property<DateTime>("RowVersion")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<uint>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<int>("ServiceCount")
                         .HasColumnType("integer");

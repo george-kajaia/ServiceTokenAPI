@@ -137,14 +137,14 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
             return Conflict("The record was changed by another user. Refresh the data.");
         }
 
-        return Ok(c);
+        return Ok();
     }
 
     [HttpDelete("delete")]
     public async Task<IActionResult> Delete(int companyId, uint rowVersion)
     {
         var c = await db.Companies.FirstOrDefaultAsync(x => x.Id == companyId && x.RowVersion == rowVersion);
-        if (c is null) return NotFound("The record was changed by another user. Refresh the data.");
+        if (c is null) return NotFound("Record not found or already deleted.");
 
         db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
@@ -156,7 +156,7 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
         }
         catch (DbUpdateConcurrencyException)
         {
-            return Conflict("The record was changed by another user. Refresh the data.");
+            return Conflict("Record not found or already deleted.");
         }
 
         return NoContent();

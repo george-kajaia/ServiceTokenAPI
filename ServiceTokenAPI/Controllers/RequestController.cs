@@ -68,6 +68,7 @@ public class RequestController(
         db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
         request.ProdId = requestDto.ProdId;
+        request.ServiceTokenCount = requestDto.ServiceTokenCount;
 
         try
         {
@@ -85,7 +86,7 @@ public class RequestController(
     public async Task<IActionResult> Delete(int requestId, uint rowVersion)
     {
         var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
-        if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
+        if (request is null) return NotFound("Record not found or already deleted.");
 
         db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
@@ -97,7 +98,7 @@ public class RequestController(
         }
         catch (DbUpdateConcurrencyException)
         {
-            return Conflict("The record was changed by another user. Refresh the data.");
+            return Conflict("Record not found or already deleted.");
         }
 
         return NoContent();

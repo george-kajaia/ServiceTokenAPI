@@ -18,6 +18,7 @@ namespace ServiceTokenApi.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     Name = table.Column<string>(type: "text", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -34,7 +35,9 @@ namespace ServiceTokenApi.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     PublicKey = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<byte>(type: "smallint", nullable: false),
                     UserName = table.Column<string>(type: "text", nullable: false),
                     Password = table.Column<string>(type: "text", nullable: false)
                 },
@@ -68,10 +71,10 @@ namespace ServiceTokenApi.Migrations
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    RowVersion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     ProdId = table.Column<long>(type: "bigint", nullable: false),
-                    TokenCount = table.Column<int>(type: "integer", nullable: false),
+                    ServiceTokenCount = table.Column<int>(type: "integer", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
                     AuthorizeDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
@@ -87,7 +90,7 @@ namespace ServiceTokenApi.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "text", nullable: false),
-                    RowVersion = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     RequestId = table.Column<long>(type: "bigint", nullable: false),
                     ProdId = table.Column<long>(type: "bigint", nullable: false),

@@ -117,7 +117,7 @@ public class UserController(ServiceTokenDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         var c = await db.Users.FirstOrDefaultAsync(x => x.Id == id);
-        if (c is null) return NotFound();
+        if (c is null) return NotFound("Record not found or already deleted");
 
         db.Users.Remove(c);
         await db.SaveChangesAsync();

@@ -81,13 +81,13 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpGet("GetSecondaryMarketServiceTokens")]
-    public async Task<ActionResult<List<ServiceTokenDto>>> GetSecondaryMarketServiceTokens(string investorPublicKey, int companyId = -1, int requestId = -1)
+    public async Task<ActionResult<List<ServiceTokenDto>>> GetSecondaryMarketServiceTokens(string investorPublicKey = "", int companyId = -1, int requestId = -1)
     {
         var bondList = await db.ServiceTokens.AsNoTracking()
             .Where(x => 
             x.OwnerType == OwnerType.Investor && 
             x.Status == ServiceTokenStatus.Available && 
-            x.OwnerPublicKey != investorPublicKey &&
+            (x.OwnerPublicKey != investorPublicKey || investorPublicKey == string.Empty) &&
             (x.CompanyId == companyId || companyId == -1) &&
             (x.RequestId == requestId || requestId == -1))
             .Join(

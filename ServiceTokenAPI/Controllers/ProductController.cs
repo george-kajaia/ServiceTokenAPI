@@ -80,7 +80,7 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
     public async Task<IActionResult> Delete(int prodId)
     {
         var product = await db.Products.FirstOrDefaultAsync(x => x.Id == prodId);
-        if (product is null) return NotFound();
+        if (product is null) return NotFound("Record not found or already deleted.");
 
         db.Products.Remove(product);
 
