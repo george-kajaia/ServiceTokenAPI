@@ -118,7 +118,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPost("BuyPrimaryServiceToken")]
-    public async Task<ActionResult> BuyPrimaryServiceToken(string serviceTokenId, uint rowVersion, string investorPublicKey)
+    public async Task<IActionResult> BuyPrimaryServiceToken(string serviceTokenId, uint rowVersion, string investorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
@@ -161,7 +161,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPost("MarkServiceTokenForResell")]
-    public async Task<ActionResult> MarkServiceTokenForResell(string serviceTokenId, uint rowVersion)
+    public async Task<IActionResult> MarkServiceTokenForResell(string serviceTokenId, uint rowVersion)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Sold);
@@ -194,7 +194,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPost("CancelReselling")]
-    public async Task<ActionResult> CancelReselling(string serviceTokenId, uint rowVersion)
+    public async Task<IActionResult> CancelReselling(string serviceTokenId, uint rowVersion)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
@@ -228,7 +228,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPost("BuySecondaryServiceToken")]
-    public async Task<ActionResult> BuySecondaryServiceToken(string serviceTokenId, uint rowVersion, string newInvestorPublicKey)
+    public async Task<IActionResult> BuySecondaryServiceToken(string serviceTokenId, uint rowVersion, string newInvestorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking().FirstOrDefaultAsync(x => 
         x.Id == serviceTokenId && 
