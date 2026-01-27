@@ -1,5 +1,7 @@
 ﻿using System.Data;
 using System.Net.Mime;
+using System.Security.AccessControl;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -21,32 +23,87 @@ public class RequestController(
     private readonly GeneralOptions generalOptions = generalOptions.Value;
 
     [HttpGet("GetAll")]
-    public async Task<ActionResult<List<Request>>> GetAll(int CompanyId = -1, RequestStatus status = RequestStatus.None)
+    public async Task<ActionResult<List<RequestDto>>> GetAll(int CompanyId = -1, RequestStatus status = RequestStatus.None)
     {
         var c = await db.Requests.AsNoTracking().Where(
             x => (x.CompanyId == CompanyId || CompanyId == -1) &&
                  (x.Status == status || status == RequestStatus.None)
-            ).ToListAsync();
+            )
+            .Join(
+            db.Companies,
+            r => r.CompanyId,
+            c => c.Id,
+            (Request, Company) => new { Request, Company.Name}
+            )
+            .Join(
+            db.Products,
+            x => x.Request.ProductId,
+            p => p.Id,
+            (x, p) => new RequestDto
+            {
+                Id = x.Request.Id,
+                RowVersion = x.Request.RowVersion,
+                CompanyId = x.Request.CompanyId,
+                CompanyName = x.Name,
+                ProductId = x.Request.ProductId,
+                ProductName = p.Name,
+                ServiceTokenCount = x.Request.ServiceTokenCount,
+                RegDate = x.Request.RegDate,
+                Status = x.Request.Status,
+                AuthorizeDate = x.Request.AuthorizeDate,
+                ApproveDate = x.Request.ApproveDate
+            }
+            )
+            .OrderBy(x => x.CompanyName).ThenBy(x => x.Id)
+            .ToListAsync();
 
         return Ok(c);
     }
 
     [HttpGet("GetById/{id}")]
-    public async Task<ActionResult<Request>> GetById(long requestId)
+    public async Task<ActionResult<RequestDto>> GetById(long requestId)
     {
-        var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId);
+        var request = await db.Requests.AsNoTracking()
+            .Where(x => x.Id == requestId)
+            .Join(
+            db.Companies,
+            r => r.CompanyId,
+            c => c.Id,
+            (Request, Company) => new { Request, Company.Name }
+            )
+            .Join(
+            db.Products,
+            x => x.Request.ProductId,
+            p => p.Id,
+            (x, p) => new RequestDto
+            {
+                Id = x.Request.Id,
+                RowVersion = x.Request.RowVersion,
+                CompanyId = x.Request.CompanyId,
+                CompanyName = x.Name,
+                ProductId = x.Request.ProductId,
+                ProductName = p.Name,
+                ServiceTokenCount = x.Request.ServiceTokenCount,
+                RegDate = x.Request.RegDate,
+                Status = x.Request.Status,
+                AuthorizeDate = x.Request.AuthorizeDate,
+                ApproveDate = x.Request.ApproveDate
+            }
+            )
+            .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).FirstOrDefaultAsync();
+
         if (request is null) return NotFound();
 
         return Ok(request);
     }
 
     [HttpPost("Create")]
-    public async Task<ActionResult> Create([FromBody] RequestDto requestDto)
+    public async Task<IActionResult> Create([FromBody] NewRequestDto requestDto)
     {
         var request = new Request
         {
             CompanyId = requestDto.CompanyId,
-            ProdId = requestDto.ProdId,
+            ProductId = requestDto.ProductId,
             ServiceTokenCount = requestDto.ServiceTokenCount,
             RegDate = DateTime.UtcNow,
             Status = RequestStatus.Created
@@ -60,14 +117,14 @@ public class RequestController(
     }
 
     [HttpPut("Update")]
-    public async Task<ActionResult> Update(int requestId, uint rowVersion, [FromBody] RequestDto requestDto)
+    public async Task<IActionResult> Update(int requestId, uint rowVersion, [FromBody] NewRequestDto requestDto)
     {
         var request = await db.Requests.FirstOrDefaultAsync(x => x.Id == requestId && x.RowVersion == rowVersion);
         if (request is null) return NotFound("The record was changed by another user. Refresh the data.");
 
         db.Entry(request).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
-        request.ProdId = requestDto.ProdId;
+        request.ProductId = requestDto.ProductId;
         request.ServiceTokenCount = requestDto.ServiceTokenCount;
 
         try
@@ -161,7 +218,7 @@ public class RequestController(
         request.Status = RequestStatus.Approved;
         request.ApproveDate = DateTime.UtcNow;
 
-        var product = await db.Products.AsNoTracking().Where(x => x.Id == request.ProdId).SingleAsync();
+        var product = await db.Products.AsNoTracking().Where(x => x.Id == request.ProductId).SingleAsync();
 
         List<ServiceToken> serviceTokens = new List<ServiceToken>();
         List<Operation> serviceTokenOperations = new List<Operation>();
@@ -176,7 +233,7 @@ public class RequestController(
                     Id = Guid.NewGuid().ToString(),
                     CompanyId = request.CompanyId,
                     RequestId = request.Id,
-                    ProdId = request.ProdId,
+                    ProductId = request.ProductId,
                     StartDate = DateTime.UtcNow,
                     EndDate = null,
                     Status = ServiceTokenStatus.Available,

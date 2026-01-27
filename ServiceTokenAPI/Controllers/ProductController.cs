@@ -42,9 +42,9 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpGet("GetById/{id}")]
-    public async Task<ActionResult> GetById(long prodId)
+    public async Task<ActionResult> GetById(long ProductId)
     {
-        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == prodId);
+        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == ProductId);
         if (product is null) return NotFound();
 
         return Ok(product);
@@ -61,9 +61,9 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpPut("Update")]
-    public async Task<ActionResult> Update(int prodId, [FromBody] Product newProduct)
+    public async Task<ActionResult> Update(int ProductId, [FromBody] Product newProduct)
     {
-        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == prodId);
+        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == ProductId);
         if (product is null) return NotFound();
 
         product.Name = newProduct.Name;
@@ -77,9 +77,9 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
     }
 
     [HttpDelete("Delete")]
-    public async Task<IActionResult> Delete(int prodId)
+    public async Task<IActionResult> Delete(int ProductId)
     {
-        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == prodId);
+        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == ProductId);
         if (product is null) return NotFound("Record not found or already deleted.");
 
         db.Products.Remove(product);

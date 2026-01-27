@@ -29,7 +29,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                 RowVersion = b.RowVersion,
                 CompanyId = b.CompanyId,
                 RequestId = b.RequestId,
-                ProdId  = b.ProdId,
+                ProductId  = b.ProductId,
                 StartDate  = b.StartDate,
                 EndDate  = b.EndDate,
                 Status  = b.Status,
@@ -63,7 +63,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                 RowVersion = b.RowVersion,
                 CompanyId = b.CompanyId,
                 RequestId = b.RequestId,
-                ProdId = b.ProdId,
+                ProductId = b.ProductId,
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
                 Status = b.Status,
@@ -100,7 +100,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                 RowVersion = b.RowVersion,
                 CompanyId = b.CompanyId,
                 RequestId = b.RequestId,
-                ProdId = b.ProdId,
+                ProductId = b.ProductId,
                 StartDate = b.StartDate,
                 EndDate = b.EndDate,
                 Status = b.Status,
@@ -126,7 +126,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 
         db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
 
-        var term = (await db.Products.Where(x => x.Id == serviceToken.ProdId).Select(x => x.Term).SingleAsync()).GetValueOrDefault();
+        var term = (await db.Products.Where(x => x.Id == serviceToken.ProductId).Select(x => x.Term).SingleAsync()).GetValueOrDefault();
 
         var startDate = DateTime.UtcNow.Date;
         var endDate = DateTime.UtcNow.Date.AddMonths(term);

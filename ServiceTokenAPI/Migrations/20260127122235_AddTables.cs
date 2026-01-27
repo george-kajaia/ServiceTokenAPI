@@ -73,7 +73,7 @@ namespace ServiceTokenApi.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
-                    ProdId = table.Column<long>(type: "bigint", nullable: false),
+                    ProductId = table.Column<long>(type: "bigint", nullable: false),
                     ServiceTokenCount = table.Column<int>(type: "integer", nullable: false),
                     RegDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
@@ -93,7 +93,7 @@ namespace ServiceTokenApi.Migrations
                     xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false),
                     CompanyId = table.Column<long>(type: "bigint", nullable: false),
                     RequestId = table.Column<long>(type: "bigint", nullable: false),
-                    ProdId = table.Column<long>(type: "bigint", nullable: false),
+                    ProductId = table.Column<long>(type: "bigint", nullable: false),
                     StartDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     EndDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Status = table.Column<byte>(type: "smallint", nullable: false),
@@ -189,9 +189,9 @@ namespace ServiceTokenApi.Migrations
                 column: "CompanyId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ServiceTokens_ProdId",
+                name: "IX_ServiceTokens_ProductId",
                 table: "ServiceTokens",
-                column: "ProdId");
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ServiceTokens_RequestId",

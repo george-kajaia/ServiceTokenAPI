@@ -9,7 +9,7 @@ namespace ServiceTokenApi.Entities
         [Timestamp]
         public uint RowVersion { get; set; }
         public long CompanyId { get; set; }
-        public long ProdId { get; set; }
+        public long ProductId { get; set; }
         public  int ServiceTokenCount { get; set; }
         public DateTime RegDate { get; set; }
         public RequestStatus Status { get; set; }       

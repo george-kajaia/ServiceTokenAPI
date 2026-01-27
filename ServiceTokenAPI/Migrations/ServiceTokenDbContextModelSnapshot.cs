@@ -193,7 +193,7 @@ namespace ServiceTokenApi.Migrations
                     b.Property<long>("CompanyId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("ProdId")
+                    b.Property<long>("ProductId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("RegDate")
@@ -237,7 +237,7 @@ namespace ServiceTokenApi.Migrations
                     b.Property<byte>("OwnerType")
                         .HasColumnType("smallint");
 
-                    b.Property<long>("ProdId")
+                    b.Property<long>("ProductId")
                         .HasColumnType("bigint");
 
                     b.Property<long>("RequestId")
@@ -262,7 +262,7 @@ namespace ServiceTokenApi.Migrations
 
                     b.HasIndex("CompanyId");
 
-                    b.HasIndex("ProdId");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("RequestId");
 
