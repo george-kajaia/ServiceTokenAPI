@@ -14,7 +14,7 @@ using ServiceTokenApi.Enums;
 namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("servicetoken/api/[controller]")]
+[Route("api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class RequestController(
     ServiceTokenDbContext db,

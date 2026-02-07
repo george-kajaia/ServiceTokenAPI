@@ -11,7 +11,7 @@ using System.Xml.Linq;
 namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("servicetoken/api/[controller]")]
+[Route("api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class ProductController(ServiceTokenDbContext db) : ControllerBase
 {

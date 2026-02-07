@@ -8,7 +8,7 @@ using System.Net.Mime;
 namespace ServiceTokenApi.Controllers;
 
 [ApiController]
-[Route("servicetoken/api/[controller]")]
+[Route("api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
 public class InvestorController(ServiceTokenDbContext db) : ControllerBase
 {
