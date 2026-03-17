@@ -17,73 +17,87 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
     [HttpGet("GetInvestorServiceTokens")]
     public async Task<ActionResult<List<ServiceTokenDto>>> GetInvestorServiceTokens(string investorPublicKey)
     {
-        var bondList = await db.ServiceTokens.AsNoTracking()
+        var tokenList = await db.ServiceTokens.AsNoTracking()
             .Where(x => x.OwnerType == OwnerType.Investor && x.OwnerPublicKey == investorPublicKey)
             .Join(
-            db.Companies,
-            b => b.CompanyId,
-            c => c.Id,
-            (b, c) => new ServiceTokenDto
-            {
-                Id = b.Id,
-                RowVersion = b.RowVersion,
-                CompanyId = b.CompanyId,
-                RequestId = b.RequestId,
-                ProductId  = b.ProductId,
-                StartDate  = b.StartDate,
-                EndDate  = b.EndDate,
-                Status  = b.Status,
-                Count  = b.Count,
-                ServiceCount  = b.ServiceCount,
-                ScheduleType  = b.ScheduleType,
-                OwnerType  = b.OwnerType,
-                OwnerPublicKey  = b.OwnerPublicKey,
-                CompanyName = c.Name
-            }
+                db.Companies,
+                b => b.CompanyId,
+                c => c.Id,
+                (b, c) => new { Token = b, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                bc => bc.Token.ProductId,
+                p => p.Id,
+                (bc, p) => new ServiceTokenDto
+                {
+                    Id = bc.Token.Id,
+                    RowVersion = bc.Token.RowVersion,
+                    CompanyId = bc.Token.CompanyId,
+                    RequestId = bc.Token.RequestId,
+                    ProductId = bc.Token.ProductId,
+                    ProductName = p.Name,
+                    StartDate = bc.Token.StartDate,
+                    EndDate = bc.Token.EndDate,
+                    Status = bc.Token.Status,
+                    Count = bc.Token.Count,
+                    ServiceCount = bc.Token.ServiceCount,
+                    ScheduleType = bc.Token.ScheduleType,
+                    OwnerType = bc.Token.OwnerType,
+                    OwnerPublicKey = bc.Token.OwnerPublicKey,
+                    CompanyName = bc.CompanyName
+                }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
 
-        return Ok(bondList);
+        return Ok(tokenList);
     }
 
     [HttpGet("GetPrimaryMarketServiceTokens")]
     public async Task<ActionResult<List<ServiceTokenDto>>> GetPrimaryMarketServiceTokens(int companyId = -1, int requestId = -1)
     {
-        var bondList = await db.ServiceTokens.AsNoTracking()
+        var tokenList = await db.ServiceTokens.AsNoTracking()
             .Where(x => x.OwnerType == OwnerType.Company && x.Status == ServiceTokenStatus.Available &&
             (x.CompanyId == companyId || companyId == -1) &&
             (x.RequestId == requestId || requestId == -1))
             .Join(
-            db.Companies,
-            b => b.CompanyId,
-            c => c.Id,
-            (b, c) => new ServiceTokenDto
-            {
-                Id = b.Id,
-                RowVersion = b.RowVersion,
-                CompanyId = b.CompanyId,
-                RequestId = b.RequestId,
-                ProductId = b.ProductId,
-                StartDate = b.StartDate,
-                EndDate = b.EndDate,
-                Status = b.Status,
-                Count = b.Count,
-                ServiceCount = b.ServiceCount,
-                ScheduleType = b.ScheduleType,
-                OwnerType = b.OwnerType,
-                OwnerPublicKey = b.OwnerPublicKey,
-                CompanyName = c.Name
-            }
+                db.Companies,
+                b => b.CompanyId,
+                c => c.Id,
+                (b, c) => new { Token = b, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                bc => bc.Token.ProductId,
+                p => p.Id,
+                (bc, p) => new ServiceTokenDto
+                {
+                    Id = bc.Token.Id,
+                    RowVersion = bc.Token.RowVersion,
+                    CompanyId = bc.Token.CompanyId,
+                    RequestId = bc.Token.RequestId,
+                    ProductId = bc.Token.ProductId,
+                    ProductName = p.Name,
+                    StartDate = bc.Token.StartDate,
+                    EndDate = bc.Token.EndDate,
+                    Status = bc.Token.Status,
+                    Count = bc.Token.Count,
+                    ServiceCount = bc.Token.ServiceCount,
+                    ScheduleType = bc.Token.ScheduleType,
+                    OwnerType = bc.Token.OwnerType,
+                    OwnerPublicKey = bc.Token.OwnerPublicKey,
+                    CompanyName = bc.CompanyName
+                }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
 
-        return Ok(bondList);
+        return Ok(tokenList);
     }
 
     [HttpGet("GetSecondaryMarketServiceTokens")]
     public async Task<ActionResult<List<ServiceTokenDto>>> GetSecondaryMarketServiceTokens(string investorPublicKey = "", int companyId = -1, int requestId = -1)
     {
-        var bondList = await db.ServiceTokens.AsNoTracking()
+        var tokenList = await db.ServiceTokens.AsNoTracking()
             .Where(x => 
             x.OwnerType == OwnerType.Investor && 
             x.Status == ServiceTokenStatus.Available && 
@@ -91,30 +105,37 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
             (x.CompanyId == companyId || companyId == -1) &&
             (x.RequestId == requestId || requestId == -1))
             .Join(
-            db.Companies,
-            b => b.CompanyId,
-            c => c.Id,
-            (b, c) => new ServiceTokenDto
-            {
-                Id = b.Id,
-                RowVersion = b.RowVersion,
-                CompanyId = b.CompanyId,
-                RequestId = b.RequestId,
-                ProductId = b.ProductId,
-                StartDate = b.StartDate,
-                EndDate = b.EndDate,
-                Status = b.Status,
-                Count = b.Count,
-                ServiceCount = b.ServiceCount,
-                ScheduleType = b.ScheduleType,
-                OwnerType = b.OwnerType,
-                OwnerPublicKey = b.OwnerPublicKey,
-                CompanyName = c.Name
-            }
+                db.Companies,
+                b => b.CompanyId,
+                c => c.Id,
+                (b, c) => new { Token = b, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                bc => bc.Token.ProductId,
+                p => p.Id,
+                (bc, p) => new ServiceTokenDto
+                {
+                    Id = bc.Token.Id,
+                    RowVersion = bc.Token.RowVersion,
+                    CompanyId = bc.Token.CompanyId,
+                    RequestId = bc.Token.RequestId,
+                    ProductId = bc.Token.ProductId,
+                    ProductName = p.Name,
+                    StartDate = bc.Token.StartDate,
+                    EndDate = bc.Token.EndDate,
+                    Status = bc.Token.Status,
+                    Count = bc.Token.Count,
+                    ServiceCount = bc.Token.ServiceCount,
+                    ScheduleType = bc.Token.ScheduleType,
+                    OwnerType = bc.Token.OwnerType,
+                    OwnerPublicKey = bc.Token.OwnerPublicKey,
+                    CompanyName = bc.CompanyName
+                }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
 
-        return Ok(bondList);
+        return Ok(tokenList);
     }
 
     [HttpPost("BuyPrimaryServiceToken")]
