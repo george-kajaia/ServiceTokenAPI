@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceTokenApi.DBContext;
-using ServiceTokenApi.Dto;
 using ServiceTokenApi.Entities;
-using ServiceTokenApi.Enums;
-using System.ComponentModel.Design;
 using System.Net.Mime;
-using System.Xml.Linq;
 
 namespace ServiceTokenApi.Controllers;
 
@@ -35,7 +31,6 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
             .OrderBy(c => c.Id)
             .Skip(skip)
             .Take(take)
-            .Select(item => item)
             .ToListAsync();
 
         return Ok(items);
@@ -54,9 +49,7 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
     public async Task<IActionResult> Create([FromBody] Product product)
     {
         db.Products.Add(product);
-
         await db.SaveChangesAsync();
-
         return Ok();
     }
 
@@ -67,7 +60,7 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
         if (product is null) return NotFound();
 
         product.Name = newProduct.Name;
-        product.ServiceCount = newProduct.ServiceCount;        
+        product.ServiceCount = newProduct.ServiceCount;
         product.Price = newProduct.Price;
         product.Term = newProduct.Term;
         product.ScheduleType = newProduct.ScheduleType;
@@ -83,9 +76,64 @@ public class ProductController(ServiceTokenDbContext db) : ControllerBase
         if (product is null) return NotFound("Record not found or already deleted.");
 
         db.Products.Remove(product);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
 
+    // ─── Pictogram endpoints ────────────────────────────────────────────────
+
+    [HttpPost("{productId}/Pictogram")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> AddPictogram(long productId, IFormFile pictogram)
+    {
+        var product = await db.Products.FirstOrDefaultAsync(x => x.Id == productId);
+        if (product is null) return NotFound("Product not found.");
+
+        var alreadyExists = await db.ProductPictograms
+            .AnyAsync(p => p.ProductId == productId);
+        if (alreadyExists)
+            return Conflict("A pictogram already exists for this product. Use PUT to update it.");
+
+        using var ms = new MemoryStream();
+        await pictogram.CopyToAsync(ms);
+
+        var entity = new ProductPictogram
+        {
+            ProductId = productId,
+            Pictogram = ms.ToArray()
+        };
+
+        db.ProductPictograms.Add(entity);
+        await db.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetPictogram), new { productId }, null);
+    }
+
+    [HttpPut("{productId}/Pictogram")]
+    [Consumes("multipart/form-data")]
+    public async Task<IActionResult> UpdatePictogram(long productId, IFormFile pictogram)
+    {
+        var entity = await db.ProductPictograms
+            .FirstOrDefaultAsync(p => p.ProductId == productId);
+        if (entity is null) return NotFound("No pictogram found for this product. Use POST to add one.");
+
+        using var ms = new MemoryStream();
+        await pictogram.CopyToAsync(ms);
+
+        entity.Pictogram = ms.ToArray();
         await db.SaveChangesAsync();
 
         return NoContent();
+    }
+
+    [HttpGet("{productId}/Pictogram")]
+    public async Task<IActionResult> GetPictogram(long productId)
+    {
+        var entity = await db.ProductPictograms
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProductId == productId);
+        if (entity is null) return NotFound("No pictogram found for this product.");
+
+        return File(entity.Pictogram, "image/png");
     }
 }

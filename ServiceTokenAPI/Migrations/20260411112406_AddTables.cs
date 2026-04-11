@@ -146,6 +146,24 @@ namespace ServiceTokenApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProductPictograms",
+                columns: table => new
+                {
+                    ProductId = table.Column<long>(type: "bigint", nullable: false),
+                    Pictogram = table.Column<byte[]>(type: "bytea", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductPictograms", x => x.ProductId);
+                    table.ForeignKey(
+                        name: "FK_ProductPictograms_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Operations",
                 columns: table => new
                 {
@@ -212,7 +230,7 @@ namespace ServiceTokenApi.Migrations
                 name: "Operations");
 
             migrationBuilder.DropTable(
-                name: "Products");
+                name: "ProductPictograms");
 
             migrationBuilder.DropTable(
                 name: "Requests");
@@ -225,6 +243,9 @@ namespace ServiceTokenApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "ServiceTokens");
+
+            migrationBuilder.DropTable(
+                name: "Products");
         }
     }
 }

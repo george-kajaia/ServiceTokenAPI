@@ -11,6 +11,7 @@ namespace ServiceTokenApi.DBContext
         public DbSet<Investor> Investors { get; set; }
         public DbSet<Operation> Operations { get; set; }
         public DbSet<Product> Products { get; set; }
+        public DbSet<ProductPictogram> ProductPictograms { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<ServiceToken> ServiceTokens { get; set; }
         public DbSet<User> Users { get; set; }

@@ -11,5 +11,6 @@ namespace ServiceTokenApi.Entities
         public decimal Price { get; set; }
         public int? Term { get; set; }
         public ScheduleType ScheduleType { get; set; } = null!;
+        public ProductPictogram? ProductPictogram { get; set; }
     }
 }

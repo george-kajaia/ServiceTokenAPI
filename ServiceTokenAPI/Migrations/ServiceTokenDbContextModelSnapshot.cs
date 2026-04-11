@@ -176,6 +176,20 @@ namespace ServiceTokenApi.Migrations
                     b.ToTable("Products", (string)null);
                 });
 
+            modelBuilder.Entity("ServiceTokenApi.Entities.ProductPictogram", b =>
+                {
+                    b.Property<long>("ProductId")
+                        .HasColumnType("bigint");
+
+                    b.Property<byte[]>("Pictogram")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.HasKey("ProductId");
+
+                    b.ToTable("ProductPictograms", (string)null);
+                });
+
             modelBuilder.Entity("ServiceTokenApi.Entities.Request", b =>
                 {
                     b.Property<long>("Id")
@@ -337,6 +351,15 @@ namespace ServiceTokenApi.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("ServiceTokenApi.Entities.ProductPictogram", b =>
+                {
+                    b.HasOne("ServiceTokenApi.Entities.Product", null)
+                        .WithOne("ProductPictogram")
+                        .HasForeignKey("ServiceTokenApi.Entities.ProductPictogram", "ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ServiceTokenApi.Entities.ServiceToken", b =>
                 {
                     b.OwnsOne("ServiceTokenApi.Enums.ScheduleType", "ScheduleType", b1 =>
@@ -365,6 +388,11 @@ namespace ServiceTokenApi.Migrations
             modelBuilder.Entity("ServiceTokenApi.Entities.Company", b =>
                 {
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ServiceTokenApi.Entities.Product", b =>
+                {
+                    b.Navigation("ProductPictogram");
                 });
 #pragma warning restore 612, 618
         }
