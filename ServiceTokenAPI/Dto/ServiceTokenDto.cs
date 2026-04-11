@@ -22,5 +22,6 @@ namespace ServiceTokenApi.Dto
         public ScheduleType ScheduleType { get; set; } = null!;
         public OwnerType OwnerType { get; set; }
         public string OwnerPublicKey { get; set; } = string.Empty;
+        public byte[] Pictogram { get; set; } = Array.Empty<byte>();
     }
 }

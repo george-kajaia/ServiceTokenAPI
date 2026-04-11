@@ -21,31 +21,38 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
             .Where(x => x.OwnerType == OwnerType.Investor && x.OwnerPublicKey == investorPublicKey)
             .Join(
                 db.Companies,
-                b => b.CompanyId,
+                token => token.CompanyId,
                 c => c.Id,
-                (b, c) => new { Token = b, CompanyName = c.Name }
+                (token, c) => new { Token = token, CompanyName = c.Name }
             )
             .Join(
                 db.Products,
-                bc => bc.Token.ProductId,
+                tc => tc.Token.ProductId,
                 p => p.Id,
-                (bc, p) => new ServiceTokenDto
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
                 {
-                    Id = bc.Token.Id,
-                    RowVersion = bc.Token.RowVersion,
-                    CompanyId = bc.Token.CompanyId,
-                    RequestId = bc.Token.RequestId,
-                    ProductId = bc.Token.ProductId,
-                    ProductName = p.Name,
-                    StartDate = bc.Token.StartDate,
-                    EndDate = bc.Token.EndDate,
-                    Status = bc.Token.Status,
-                    Count = bc.Token.Count,
-                    ServiceCount = bc.Token.ServiceCount,
-                    ScheduleType = bc.Token.ScheduleType,
-                    OwnerType = bc.Token.OwnerType,
-                    OwnerPublicKey = bc.Token.OwnerPublicKey,
-                    CompanyName = bc.CompanyName
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
                 }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
@@ -62,31 +69,38 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
             (x.RequestId == requestId || requestId == -1))
             .Join(
                 db.Companies,
-                b => b.CompanyId,
+                token => token.CompanyId,
                 c => c.Id,
-                (b, c) => new { Token = b, CompanyName = c.Name }
+                (token, c) => new { Token = token, CompanyName = c.Name }
             )
             .Join(
                 db.Products,
-                bc => bc.Token.ProductId,
+                tc => tc.Token.ProductId,
                 p => p.Id,
-                (bc, p) => new ServiceTokenDto
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
                 {
-                    Id = bc.Token.Id,
-                    RowVersion = bc.Token.RowVersion,
-                    CompanyId = bc.Token.CompanyId,
-                    RequestId = bc.Token.RequestId,
-                    ProductId = bc.Token.ProductId,
-                    ProductName = p.Name,
-                    StartDate = bc.Token.StartDate,
-                    EndDate = bc.Token.EndDate,
-                    Status = bc.Token.Status,
-                    Count = bc.Token.Count,
-                    ServiceCount = bc.Token.ServiceCount,
-                    ScheduleType = bc.Token.ScheduleType,
-                    OwnerType = bc.Token.OwnerType,
-                    OwnerPublicKey = bc.Token.OwnerPublicKey,
-                    CompanyName = bc.CompanyName
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
                 }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
@@ -106,31 +120,38 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
             (x.RequestId == requestId || requestId == -1))
             .Join(
                 db.Companies,
-                b => b.CompanyId,
+                token => token.CompanyId,
                 c => c.Id,
-                (b, c) => new { Token = b, CompanyName = c.Name }
+                (token, c) => new { Token = token, CompanyName = c.Name }
             )
             .Join(
                 db.Products,
-                bc => bc.Token.ProductId,
+                tc => tc.Token.ProductId,
                 p => p.Id,
-                (bc, p) => new ServiceTokenDto
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
                 {
-                    Id = bc.Token.Id,
-                    RowVersion = bc.Token.RowVersion,
-                    CompanyId = bc.Token.CompanyId,
-                    RequestId = bc.Token.RequestId,
-                    ProductId = bc.Token.ProductId,
-                    ProductName = p.Name,
-                    StartDate = bc.Token.StartDate,
-                    EndDate = bc.Token.EndDate,
-                    Status = bc.Token.Status,
-                    Count = bc.Token.Count,
-                    ServiceCount = bc.Token.ServiceCount,
-                    ScheduleType = bc.Token.ScheduleType,
-                    OwnerType = bc.Token.OwnerType,
-                    OwnerPublicKey = bc.Token.OwnerPublicKey,
-                    CompanyName = bc.CompanyName
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
                 }
             )
             .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
