@@ -8,6 +8,8 @@
         BuySecondary = 3,
         CancelReselling = 4,
         GetService = 5,
+        MarkInCart = 6,
+        CancelInCart = 7,
         Expire = 255
     }
 }
