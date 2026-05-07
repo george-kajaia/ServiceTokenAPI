@@ -14,6 +14,7 @@ namespace ServiceTokenApi.DBContext
         public DbSet<ProductPictogram> ProductPictograms { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<ServiceToken> ServiceTokens { get; set; }
+        public DbSet<ServiceTokenInCart> ServiceTokenInCart { get; set; }
         public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

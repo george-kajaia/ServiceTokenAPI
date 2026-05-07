@@ -14,6 +14,7 @@ namespace BondTradingPlatformApi.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 {
+    //--Get Tokens
     [HttpGet("GetInvestorServiceTokens")]
     public async Task<ActionResult<List<ServiceTokenDto>>> GetInvestorServiceTokens(string investorPublicKey)
     {
@@ -159,11 +160,228 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
         return Ok(tokenList);
     }
 
+    //--Put Into Cart
+    [HttpPost("MarkServiceTokenInCart")]
+    public async Task<ActionResult<ServiceTokenDto>> MarkServiceTokenInCart(string serviceTokenId, uint rowVersion, string investorPublicKey)
+    {
+        var serviceToken = await db.ServiceTokens.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
+        serviceToken.Status = ServiceTokenStatus.InCart;
+
+        db.ServiceTokens.Update(serviceToken);
+
+        var operation = new Operation
+        {
+            ServiceTokenId = serviceToken.Id,
+            OpType = OpType.MarkInCart,
+            OpDate = DateTime.UtcNow,
+            OwnerPublicKey = serviceToken.OwnerPublicKey
+        };
+        
+        db.Operations.Add(operation);
+
+        var serviceTokenInCart = new ServiceTokenInCart
+        {
+            ServiceTokenId = serviceToken.Id,
+            OwnerPublicKey = investorPublicKey
+        };
+
+        db.ServiceTokenInCart.Add(serviceTokenInCart);
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
+        var tokenDto = await db.ServiceTokens.AsNoTracking()
+            .Where(x => x.Id == serviceToken.Id)
+            .Join(
+                db.Companies,
+                token => token.CompanyId,
+                c => c.Id,
+                (token, c) => new { Token = token, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                tc => tc.Token.ProductId,
+                p => p.Id,
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
+                {
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
+                }
+            )
+            .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).FirstOrDefaultAsync();
+
+        return Ok(tokenDto);
+    }
+
+    [HttpPost("CancelInCart")]
+    public async Task<ActionResult<ServiceTokenDto>> CancelInCart(string serviceTokenId, uint rowVersion)
+    {
+        var serviceToken = await db.ServiceTokens.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
+        serviceToken.Status = ServiceTokenStatus.Available;
+
+        db.ServiceTokens.Update(serviceToken);
+
+        var operation = new Operation
+        {
+            ServiceTokenId = serviceToken.Id,
+            OpType = OpType.CancelInCart,
+            OpDate = DateTime.UtcNow,
+            OwnerPublicKey = serviceToken.OwnerPublicKey
+        };
+
+        db.Operations.Add(operation);
+
+        var serviceTokenInCart = await db.ServiceTokenInCart.AsNoTracking().FirstOrDefaultAsync(x => x.ServiceTokenId == serviceToken.Id);
+        if (serviceTokenInCart is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.ServiceTokenInCart.Remove(serviceTokenInCart);
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
+        var tokenDto = await db.ServiceTokens.AsNoTracking()
+            .Where(x => x.Id == serviceToken.Id)
+            .Join(
+                db.Companies,
+                token => token.CompanyId,
+                c => c.Id,
+                (token, c) => new { Token = token, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                tc => tc.Token.ProductId,
+                p => p.Id,
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
+                {
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
+                }
+            )
+            .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).FirstOrDefaultAsync();
+
+        return Ok(tokenDto);
+    }
+
+    [HttpGet("GetInvestorServiceTokensInCart")]
+    public async Task<ActionResult<ServiceTokenDto>> GetInvestorServiceTokensInCart(string investorPublicKey)
+    {
+        var tokenList = await db.ServiceTokenInCart.AsNoTracking()
+            .Where(x => x.OwnerPublicKey == investorPublicKey)
+            .Join(
+                db.ServiceTokens,
+                tokenInCart => tokenInCart.ServiceTokenId,
+                token => token.Id,                
+                (tokenInCart, token) => token
+            )
+            .Join(
+                db.Companies,
+                token => token.CompanyId,
+                c => c.Id,
+                (token, c) => new { Token = token, CompanyName = c.Name }
+            )
+            .Join(
+                db.Products,
+                tc => tc.Token.ProductId,
+                p => p.Id,
+                (tc, p) => new { tc.Token, tc.CompanyName, Product = p }
+            )
+            .Join(
+                db.ProductPictograms,
+                tc => tc.Product.Id,
+                p => p.ProductId,
+                (tc, p) => new ServiceTokenDto
+                {
+                    Id = tc.Token.Id,
+                    RowVersion = tc.Token.RowVersion,
+                    CompanyId = tc.Token.CompanyId,
+                    RequestId = tc.Token.RequestId,
+                    ProductId = tc.Token.ProductId,
+                    ProductName = tc.Product.Name,
+                    StartDate = tc.Token.StartDate,
+                    EndDate = tc.Token.EndDate,
+                    Status = tc.Token.Status,
+                    Count = tc.Token.Count,
+                    ServiceCount = tc.Token.ServiceCount,
+                    ScheduleType = tc.Token.ScheduleType,
+                    OwnerType = tc.Token.OwnerType,
+                    OwnerPublicKey = tc.Token.OwnerPublicKey,
+                    CompanyName = tc.CompanyName,
+                    Pictogram = p.Pictogram
+                }
+            )
+            .OrderBy(x => x.CompanyName).ThenBy(x => x.Id).ToListAsync();
+
+        return Ok(tokenList);
+    }
+
+    //--Buy Tokens
     [HttpPost("BuyPrimaryServiceToken")]
     public async Task<IActionResult> BuyPrimaryServiceToken(string serviceTokenId, uint rowVersion, string investorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
+            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.InCart);
         if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
 
         db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
@@ -189,6 +407,55 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
 
         db.ServiceTokens.Update(serviceToken);
         db.Operations.Add(operation);
+
+        var serviceTokenInCart = await db.ServiceTokenInCart.AsNoTracking().FirstOrDefaultAsync(x => x.ServiceTokenId == serviceToken.Id);
+        if (serviceTokenInCart is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.ServiceTokenInCart.Remove(serviceTokenInCart);
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
+        return Ok();
+    }
+
+    [HttpPost("BuySecondaryServiceToken")]
+    public async Task<IActionResult> BuySecondaryServiceToken(string serviceTokenId, uint rowVersion, string newInvestorPublicKey)
+    {
+        var serviceToken = await db.ServiceTokens.AsNoTracking().FirstOrDefaultAsync(x =>
+        x.Id == serviceTokenId &&
+        x.RowVersion == rowVersion &&
+        x.Status == ServiceTokenStatus.InCart &&
+        x.OwnerType == OwnerType.Investor &&
+        x.OwnerPublicKey != newInvestorPublicKey);
+        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
+        serviceToken.Status = ServiceTokenStatus.Sold;
+        serviceToken.OwnerPublicKey = newInvestorPublicKey;
+
+        var operation = new Operation
+        {
+            ServiceTokenId = serviceToken.Id,
+            OpType = OpType.BuySecondary,
+            OpDate = DateTime.UtcNow,
+            OwnerPublicKey = serviceToken.OwnerPublicKey
+        };
+
+        db.ServiceTokens.Update(serviceToken);
+        db.Operations.Add(operation);
+
+        var serviceTokenInCart = await db.ServiceTokenInCart.AsNoTracking().FirstOrDefaultAsync(x => x.ServiceTokenId == serviceToken.Id);
+        if (serviceTokenInCart is null) return NotFound("The record was changed by another user. Refresh the Data.");
+
+        db.ServiceTokenInCart.Remove(serviceTokenInCart);
 
         try
         {
@@ -256,114 +523,6 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
         {
             ServiceTokenId = serviceToken.Id,
             OpType = OpType.CancelReselling,
-            OpDate = DateTime.UtcNow,
-            OwnerPublicKey = serviceToken.OwnerPublicKey
-        };
-
-        db.ServiceTokens.Update(serviceToken);
-        db.Operations.Add(operation);
-
-        try
-        {
-            await db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Conflict("The record was changed by another user. Refresh the data.");
-        }
-
-        return Ok();
-    }
-
-    [HttpPost("MarkServiceTokenInCart")]
-    public async Task<IActionResult> MarkServiceTokenInCart(string serviceTokenId, uint rowVersion, string investorPublicKey)
-    {
-        var serviceToken = await db.ServiceTokens.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
-        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
-
-        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
-
-        serviceToken.Status = ServiceTokenStatus.InCart;
-        serviceToken.OwnerPublicKey = investorPublicKey;
-
-        var operation = new Operation
-        {
-            ServiceTokenId = serviceToken.Id,
-            OpType = OpType.MarkInCart,
-            OpDate = DateTime.UtcNow,
-            OwnerPublicKey = serviceToken.OwnerPublicKey
-        };
-
-        db.ServiceTokens.Update(serviceToken);
-        db.Operations.Add(operation);
-
-        try
-        {
-            await db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Conflict("The record was changed by another user. Refresh the data.");
-        }
-
-        return Ok();
-    }
-
-    [HttpPost("CancelInCart")]
-    public async Task<IActionResult> CancelInCart(string serviceTokenId, uint rowVersion)
-    {
-        var serviceToken = await db.ServiceTokens.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.InCart);
-        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
-
-        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
-
-        serviceToken.Status = ServiceTokenStatus.Available;
-
-        var operation = new Operation
-        {
-            ServiceTokenId = serviceToken.Id,
-            OpType = OpType.CancelInCart,
-            OpDate = DateTime.UtcNow,
-            OwnerPublicKey = serviceToken.OwnerPublicKey
-        };
-
-        db.ServiceTokens.Update(serviceToken);
-        db.Operations.Add(operation);
-
-        try
-        {
-            await db.SaveChangesAsync();
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return Conflict("The record was changed by another user. Refresh the data.");
-        }
-
-        return Ok();
-    }
-
-    [HttpPost("BuySecondaryServiceToken")]
-    public async Task<IActionResult> BuySecondaryServiceToken(string serviceTokenId, uint rowVersion, string newInvestorPublicKey)
-    {
-        var serviceToken = await db.ServiceTokens.AsNoTracking().FirstOrDefaultAsync(x => 
-        x.Id == serviceTokenId && 
-        x.RowVersion == rowVersion && 
-        x.Status == ServiceTokenStatus.Available &&
-        x.OwnerType == OwnerType.Investor &&
-        x.OwnerPublicKey != newInvestorPublicKey);
-        if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
-
-        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
-
-        serviceToken.Status = ServiceTokenStatus.Sold;
-        serviceToken.OwnerPublicKey = newInvestorPublicKey;
-
-        var operation = new Operation
-        {
-            ServiceTokenId = serviceToken.Id,
-            OpType = OpType.BuySecondary,
             OpDate = DateTime.UtcNow,
             OwnerPublicKey = serviceToken.OwnerPublicKey
         };
