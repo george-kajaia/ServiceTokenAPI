@@ -51,7 +51,7 @@ public class InvestorController(ServiceTokenDbContext db) : ControllerBase
     [HttpPost("Login")]
     public async Task<ActionResult<Investor>> Login([FromBody] LoginCredentialDto loginCredential)
     {
-        var c = await db.Investors.AsNoTracking().FirstOrDefaultAsync(x => x.UserName == loginCredential.userName && x.Password == loginCredential.password);
+        var c = await db.Investors.AsNoTracking().FirstOrDefaultAsync(x => x.UserName == loginCredential.UserName && x.Password == loginCredential.Password);
         if (c is null)
         {
             return NotFound();

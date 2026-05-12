@@ -60,7 +60,7 @@ public class RequestController(
         return Ok(c);
     }
 
-    [HttpGet("GetById/{id}")]
+    [HttpGet("GetById/{requestId}")]
     public async Task<ActionResult<RequestDto>> GetById(long requestId)
     {
         var request = await db.Requests.AsNoTracking()
@@ -220,8 +220,8 @@ public class RequestController(
 
         var product = await db.Products.AsNoTracking().Where(x => x.Id == request.ProductId).SingleAsync();
 
-        List<ServiceToken> serviceTokens = new List<ServiceToken>();
-        List<Operation> serviceTokenOperations = new List<Operation>();
+        List<ServiceToken> serviceTokens = [];
+        List<Operation> serviceTokenOperations = [];
 
         var platformPublicKey = generalOptions.PlatformAccount;
 
@@ -237,7 +237,7 @@ public class RequestController(
                     StartDate = DateTime.UtcNow,
                     EndDate = null,
                     Status = ServiceTokenStatus.Available,
-                    Count = 0,
+                    RemainingCount = product.ServiceCount,
                     ServiceCount = product.ServiceCount,
                     ScheduleType = new ScheduleType
                     {

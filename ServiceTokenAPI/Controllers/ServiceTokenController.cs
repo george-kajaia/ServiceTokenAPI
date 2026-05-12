@@ -1,18 +1,22 @@
 ﻿using System.Net.Mime;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Dto;
 using ServiceTokenApi.Entities;
 using ServiceTokenApi.Enums;
+using ServiceTokenApi.Hubs;
 
-namespace BondTradingPlatformApi.Controllers;
+namespace ServiceTokenApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
 [Produces(MediaTypeNames.Application.Json)]
-public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
+public class ServiceTokenController(
+    ServiceTokenDbContext db,
+    IHubContext<RedemptionHub> hub) : ControllerBase
 {
     //--Get Tokens
     [HttpGet("GetInvestorServiceTokens")]
@@ -47,7 +51,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -95,7 +99,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -146,7 +150,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -230,7 +234,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -310,7 +314,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -362,7 +366,7 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
                     Status = tc.Token.Status,
-                    Count = tc.Token.Count,
+                    RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
                     ScheduleType = tc.Token.ScheduleType,
                     OwnerType = tc.Token.OwnerType,
@@ -538,6 +542,85 @@ public class ServiceTokenController(ServiceTokenDbContext db) : ControllerBase
         {
             return Conflict("The record was changed by another user. Refresh the data.");
         }
+
+        return Ok();
+    }
+
+    /// <summary>
+    /// Called by the company-side scanner after reading the investor's QR code.
+    /// Validates the token, decrements Count (marking as Finished when it reaches 0),
+    /// logs a GetService operation, then pushes the result back to the investor's
+    /// open SignalR connection identified by connectionId.
+    /// </summary>
+    [HttpPost("GetService")]
+    public async Task<IActionResult> GetService(string serviceTokenId, uint rowVersion, string connectionId)
+    {
+        var serviceToken = await db.ServiceTokens
+            .FirstOrDefaultAsync(x =>
+                x.Id == serviceTokenId &&
+                x.RowVersion == rowVersion &&
+                x.Status == ServiceTokenStatus.Sold &&
+                x.OwnerType == OwnerType.Investor);
+
+        if (serviceToken is null)
+        {
+            await hub.Clients.Client(connectionId).SendAsync("ServiceResult", new
+            {
+                success = false,
+                message = "Token not found or already used."
+            });
+            return NotFound("Token not found or already used.");
+        }
+
+        if (serviceToken.RemainingCount <= 0)
+        {
+            await hub.Clients.Client(connectionId).SendAsync("ServiceResult", new
+            {
+                success = false,
+                message = "No service uses remaining on this token."
+            });
+            return BadRequest("No service uses remaining on this token.");
+        }
+
+        db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
+
+        serviceToken.RemainingCount -= 1;
+
+        if (serviceToken.RemainingCount == 0)
+            serviceToken.Status = ServiceTokenStatus.Finished;
+
+        var operation = new Operation
+        {
+            ServiceTokenId = serviceToken.Id,
+            OpType = OpType.GetService,
+            OpDate = DateTime.UtcNow,
+            OwnerPublicKey = serviceToken.OwnerPublicKey
+        };
+
+        db.ServiceTokens.Update(serviceToken);
+        db.Operations.Add(operation);
+
+        try
+        {
+            await db.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            await hub.Clients.Client(connectionId).SendAsync("ServiceResult", new
+            {
+                success = false,
+                message = "The token was modified concurrently. Please try again."
+            });
+            return Conflict("The record was changed by another user. Refresh the data.");
+        }
+
+        await hub.Clients.Client(connectionId).SendAsync("ServiceResult", new
+        {
+            success = true,
+            message = "Service granted successfully.",
+            count = serviceToken.RemainingCount,
+            rowVersion = serviceToken.RowVersion
+        });
 
         return Ok();
     }

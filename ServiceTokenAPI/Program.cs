@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Enums;
+using ServiceTokenApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ builder.Services.AddCors(options =>
             .WithOrigins(allowedOrigins)
             .AllowAnyMethod()
             .AllowAnyHeader()
-            .AllowCredentials();
+            .AllowCredentials();   // required for SignalR WebSocket handshake
     });
 });
 
@@ -39,6 +40,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 // ── Controllers & Swagger ─────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+
+// ── SignalR ───────────────────────────────────────────────────────────────────
+builder.Services.AddSignalR();
 
 builder.Services
     .AddOptions<GeneralOptions>()
@@ -74,5 +78,9 @@ app.UseCors("AllowConfiguredOrigins");
 app.UseAuthorization();
 
 app.MapControllers();
+
+// ── SignalR hub ───────────────────────────────────────────────────────────────
+// Must be mapped AFTER UseCors so the CORS policy applies to the WebSocket upgrade.
+app.MapHub<RedemptionHub>("/hubs/redemption");
 
 app.Run();
