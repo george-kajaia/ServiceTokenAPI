@@ -14,8 +14,9 @@ namespace ServiceTokenApi.Dto
         public long RequestId { get; set; }
         public long ProductId { get; set; }
         public string ProductName { get; set; } = null!;
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public int? Term { get; set; }
         public ServiceTokenStatus Status { get; set; }
         public int RemainingCount { get; set; }
         public int ServiceCount { get; set; }

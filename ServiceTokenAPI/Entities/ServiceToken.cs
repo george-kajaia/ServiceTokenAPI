@@ -11,7 +11,7 @@ namespace ServiceTokenApi.Entities
         public long CompanyId { get; set; }
         public long RequestId { get; set; }
         public long ProductId { get; set; }
-        public DateTime StartDate { get; set; }
+        public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public ServiceTokenStatus Status { get; set; }
         public int RemainingCount { get; set; }

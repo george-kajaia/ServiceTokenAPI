@@ -50,6 +50,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -98,6 +99,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -149,6 +151,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -233,6 +236,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -252,7 +256,7 @@ public class ServiceTokenController(
     public async Task<ActionResult<ServiceTokenDto>> CancelInCart(string serviceTokenId, uint rowVersion)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.Available);
+            .FirstOrDefaultAsync(x => x.Id == serviceTokenId && x.RowVersion == rowVersion && x.Status == ServiceTokenStatus.InCart);
         if (serviceToken is null) return NotFound("The record was changed by another user. Refresh the Data.");
 
         db.Entry(serviceToken).Property(x => x.RowVersion).OriginalValue = rowVersion;
@@ -313,6 +317,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -365,6 +370,7 @@ public class ServiceTokenController(
                     ProductName = tc.Product.Name,
                     StartDate = tc.Token.StartDate,
                     EndDate = tc.Token.EndDate,
+                    Term = tc.Product.Term,
                     Status = tc.Token.Status,
                     RemainingCount = tc.Token.RemainingCount,
                     ServiceCount = tc.Token.ServiceCount,
@@ -393,7 +399,7 @@ public class ServiceTokenController(
         var term = (await db.Products.Where(x => x.Id == serviceToken.ProductId).Select(x => x.Term).SingleAsync()).GetValueOrDefault();
 
         var startDate = DateTime.UtcNow.Date;
-        var endDate = DateTime.UtcNow.Date.AddMonths(term);
+        var endDate = startDate.AddMonths(term);
 
         serviceToken.Status = ServiceTokenStatus.Sold;
         serviceToken.StartDate = startDate;
