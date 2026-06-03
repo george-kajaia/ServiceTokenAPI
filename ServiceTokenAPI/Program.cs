@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Enums;
 using ServiceTokenApi.Hubs;
+using ServiceTokenApi.Options;
+using ServiceTokenApi.Services.Tbc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,16 @@ builder.Services
     .AddOptions<GeneralOptions>()
     .Bind(builder.Configuration.GetSection("GeneralOptions"))
     .ValidateOnStart();
+
+// ── TBC Bank E-Commerce payments ──────────────────────────────────────────────
+builder.Services.Configure<TbcOptions>(builder.Configuration.GetSection(TbcOptions.SectionName));
+builder.Services.AddSingleton<TbcTokenCache>();
+builder.Services.AddHttpClient<ITbcPaymentService, TbcPaymentService>((sp, client) =>
+{
+    var tbc = sp.GetRequiredService<IOptions<TbcOptions>>().Value;
+    client.BaseAddress = new Uri(tbc.BaseUrl);          // e.g. https://api.tbcbank.ge/v1/
+    client.DefaultRequestHeaders.Add("apikey", tbc.ApiKey);
+});
 
 var app = builder.Build();
 

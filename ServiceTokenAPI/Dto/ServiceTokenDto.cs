@@ -17,6 +17,7 @@ namespace ServiceTokenApi.Dto
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public int? Term { get; set; }
+        public decimal Price { get; set; }
         public ServiceTokenStatus Status { get; set; }
         public int RemainingCount { get; set; }
         public int ServiceCount { get; set; }

@@ -58,6 +58,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )
@@ -107,6 +108,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )
@@ -159,6 +161,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )
@@ -244,6 +247,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )
@@ -325,6 +329,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )
@@ -378,6 +383,7 @@ public class ServiceTokenController(
                     OwnerType = tc.Token.OwnerType,
                     OwnerPublicKey = tc.Token.OwnerPublicKey,
                     CompanyName = tc.CompanyName,
+                    Price = tc.Product.Price,
                     Pictogram = p.Pictogram
                 }
             )

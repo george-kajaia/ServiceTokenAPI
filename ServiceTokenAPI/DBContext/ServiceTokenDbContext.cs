@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using ServiceTokenApi.Configurations;
 using ServiceTokenApi.Entities;
 using System.Reflection;
 
@@ -10,12 +11,16 @@ namespace ServiceTokenApi.DBContext
         public DbSet<CompanyUser> CompanyUsers { get; set; }
         public DbSet<Investor> Investors { get; set; }
         public DbSet<Operation> Operations { get; set; }
+        public DbSet<Payment> Payments { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<ProductPictogram> ProductPictograms { get; set; }
         public DbSet<Request> Requests { get; set; }
         public DbSet<ServiceToken> ServiceTokens { get; set; }
         public DbSet<ServiceTokenInCart> ServiceTokenInCart { get; set; }
         public DbSet<User> Users { get; set; }
+
+        public DbSet<LegalFormDomain> LegalFormDomain { get; set; }
+        public DbSet<EconomicActivityDomain> EconomicActivityDomain { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

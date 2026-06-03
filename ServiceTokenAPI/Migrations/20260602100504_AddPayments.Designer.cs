@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ServiceTokenApi.DBContext;
@@ -11,9 +12,11 @@ using ServiceTokenApi.DBContext;
 namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
-    partial class ServiceTokenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260602100504_AddPayments")]
+    partial class AddPayments
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,25 +33,7 @@ namespace ServiceTokenApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("EconomicActivity")
-                        .HasColumnType("integer");
-
-                    b.Property<byte>("LegalForm")
-                        .HasColumnType("smallint");
-
-                    b.Property<string>("Mail")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -102,23 +87,6 @@ namespace ServiceTokenApi.Migrations
                     b.ToTable("CompanyUsers", (string)null);
                 });
 
-            modelBuilder.Entity("ServiceTokenApi.Entities.EconomicActivityDomain", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("EconomicActivityDomain", (string)null);
-                });
-
             modelBuilder.Entity("ServiceTokenApi.Entities.Investor", b =>
                 {
                     b.Property<long>("Id")
@@ -151,23 +119,6 @@ namespace ServiceTokenApi.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Investors", (string)null);
-                });
-
-            modelBuilder.Entity("ServiceTokenApi.Entities.LegalFormDomain", b =>
-                {
-                    b.Property<byte>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("smallint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<byte>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("LegalFormDomain", (string)null);
                 });
 
             modelBuilder.Entity("ServiceTokenApi.Entities.Operation", b =>
@@ -210,7 +161,7 @@ namespace ServiceTokenApi.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("numeric");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<DateTime>("CreateDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Currency")
@@ -244,7 +195,7 @@ namespace ServiceTokenApi.Migrations
                     b.Property<string>("TbcStatus")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime>("UpdateDateTime")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

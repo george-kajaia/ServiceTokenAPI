@@ -1,9 +1,12 @@
-﻿using ServiceTokenApi.Entities;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceTokenApi.DBContext;
-using System.Net.Mime;
 using ServiceTokenApi.Dto;
+using ServiceTokenApi.Entities;
+using System.Net;
+using System.Net.Mime;
+using System.Numerics;
+using System.Xml.Linq;
 
 namespace ServiceTokenApi.Controllers;
 
@@ -71,10 +74,17 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
 
         var company = new Company
         {
-            Name = Company.Name.Trim(),
             Status = 0,
             RegDate = DateTime.UtcNow,
+
+            Name = Company.Name.Trim(),
             TaxCode = Company.TaxCode.Trim(),
+            Address = Company.Address.Trim(),
+            LegalForm = Company.LegalForm,
+            EconomicActivity = Company.EconomicActivity,
+            Mail = Company.Mail.Trim(),
+            Phone = Company.Phone.Trim(),
+
             User = new CompanyUser { UserName = Company.UserName, Password = hash }
         };
 
@@ -98,9 +108,14 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
         if (c is null) return NotFound("The record was changed by another user. Refresh the data.");
 
         db.Entry(c).Property(x => x.RowVersion).OriginalValue = rowVersion;
-        
+
         c.Name = Company.Name.Trim();
         c.TaxCode = Company.TaxCode.Trim();
+        c.Address = Company.Address.Trim();
+        c.LegalForm = Company.LegalForm;
+        c.EconomicActivity = Company.EconomicActivity;
+        c.Mail = Company.Mail.Trim();
+        c.Phone = Company.Phone.Trim();
 
         try
         {
