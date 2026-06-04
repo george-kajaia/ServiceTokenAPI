@@ -4,9 +4,9 @@ using ServiceTokenApi.Enums;
 namespace ServiceTokenApi.Entities
 {
     /// <summary>
-    /// Records a single TBC E-Commerce payment intent and links it back to the service
-    /// token being purchased and the buyer. The bank callback uses <see cref="PayId"/>
-    /// to find this row and finalize the purchase.
+    /// Records a single Flitt payment intent and links it back to the service token being
+    /// purchased and the buyer. The Flitt callback / order-status lookup uses
+    /// <see cref="MerchantPaymentId"/> (our order_id) to find this row and finalize the purchase.
     /// </summary>
     public class Payment
     {
@@ -15,10 +15,10 @@ namespace ServiceTokenApi.Entities
         [Timestamp]
         public uint RowVersion { get; set; }
 
-        /// <summary>Our own identifier, sent to TBC as merchantPaymentId.</summary>
+        /// <summary>Our own identifier, sent to Flitt as <c>order_id</c>.</summary>
         public string MerchantPaymentId { get; set; } = null!;
 
-        /// <summary>TBC-side payment id (payId). Null until the create-payment call returns.</summary>
+        /// <summary>Flitt-side payment id (<c>payment_id</c>). Null until the first payment attempt.</summary>
         public string? PayId { get; set; }
 
         /// <summary>The service token this payment buys.</summary>
@@ -33,8 +33,8 @@ namespace ServiceTokenApi.Entities
 
         public PaymentStatus Status { get; set; }
 
-        /// <summary>Raw status string last reported by TBC, kept for diagnostics.</summary>
-        public string? TbcStatus { get; set; }
+        /// <summary>Raw <c>order_status</c> string last reported by Flitt, kept for diagnostics.</summary>
+        public string? ProviderStatus { get; set; }
 
         public DateTime CreatedAt { get; set; }
 

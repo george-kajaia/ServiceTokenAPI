@@ -471,7 +471,7 @@ namespace ServiceTokenApi.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("Products");
+                            b1.ToTable("Products", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -505,7 +505,7 @@ namespace ServiceTokenApi.Migrations
 
                             b1.HasKey("ServiceTokenId");
 
-                            b1.ToTable("ServiceTokens");
+                            b1.ToTable("ServiceTokens", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ServiceTokenId");

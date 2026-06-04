@@ -1,11 +1,12 @@
 using System.Net.Mime;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Dto;
 using ServiceTokenApi.Entities;
 using ServiceTokenApi.Enums;
-using ServiceTokenApi.Services.Tbc;
+using ServiceTokenApi.Services.Flitt;
 
 namespace ServiceTokenApi.Controllers;
 
@@ -14,16 +15,16 @@ namespace ServiceTokenApi.Controllers;
 [Produces(MediaTypeNames.Application.Json)]
 public class PaymentController(
     ServiceTokenDbContext db,
-    ITbcPaymentService tbc,
+    IFlittPaymentService flitt,
     ILogger<PaymentController> logger) : ControllerBase
 {
     /// <summary>
-    /// Initiates a TBC E-Commerce payment for a token the investor has already placed in
-    /// their cart (Status = InCart). Records a Payment row, asks TBC to create the payment,
-    /// and returns the checkout URL the client must redirect the buyer to.
+    /// Initiates a Flitt payment for a token the investor has already placed in their cart
+    /// (Status = InCart). Records a Payment row, asks Flitt to create an order, and returns the
+    /// checkout token the client feeds to the embedded Flitt checkout widget (no redirect).
     /// </summary>
-    [HttpPost("InitiatePrimaryPayment")]
-    public async Task<ActionResult<InitiatePaymentResultDto>> InitiatePrimaryPayment(string serviceTokenId, uint rowVersion, string investorPublicKey)
+    [HttpPost("InitiateEmbeddedPayment")]
+    public async Task<ActionResult<InitiatePaymentResultDto>> InitiateEmbeddedPayment(string serviceTokenId, uint rowVersion, string investorPublicKey)
     {
         var serviceToken = await db.ServiceTokens.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == serviceTokenId
@@ -38,11 +39,12 @@ public class PaymentController(
 
         if (price <= 0) return BadRequest("Product price is not configured.");
 
-        var merchantPaymentId = Guid.NewGuid().ToString("N");
+        // order_id must be unique per order; Flitt limits it to a reasonable length.
+        var orderId = Guid.NewGuid().ToString("N");
 
         var payment = new Payment
         {
-            MerchantPaymentId = merchantPaymentId,
+            MerchantPaymentId = orderId,
             ServiceTokenId = serviceToken.Id,
             InvestorPublicKey = investorPublicKey,
             Amount = price,
@@ -54,72 +56,119 @@ public class PaymentController(
         db.Payments.Add(payment);
         await db.SaveChangesAsync();
 
-        TbcPaymentResponse tbcResponse;
+        FlittTokenResult tokenResult;
         try
         {
-            tbcResponse = await tbc.CreatePaymentAsync(price, merchantPaymentId, $"Service token {serviceToken.Id}");
+            tokenResult = await flitt.CreateOrderAsync(price, orderId, $"Service token {serviceToken.Id}");
         }
-        catch (TbcPaymentException ex)
+        catch (FlittPaymentException ex)
         {
-            logger.LogError(ex, "Failed to create TBC payment for token {TokenId}", serviceToken.Id);
+            logger.LogError(ex, "Failed to create Flitt order for token {TokenId}", serviceToken.Id);
             payment.Status = PaymentStatus.Failed;
             payment.UpdatedAt = DateTime.UtcNow;
             await db.SaveChangesAsync();
-            return StatusCode(StatusCodes.Status502BadGateway, $"Could not initiate payment with the bank: {ex.Message}");
+            return StatusCode(StatusCodes.Status502BadGateway, $"Could not initiate payment: {ex.Message}");
         }
-
-        payment.PayId = tbcResponse.PayId;
-        payment.TbcStatus = tbcResponse.Status;
-        payment.UpdatedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-
-        if (string.IsNullOrEmpty(tbcResponse.ApprovalUrl))
-            return StatusCode(StatusCodes.Status502BadGateway, "Bank did not return a checkout URL.");
 
         return Ok(new InitiatePaymentResultDto
         {
-            PayId = tbcResponse.PayId,
-            ApprovalUrl = tbcResponse.ApprovalUrl
+            OrderId = orderId,
+            Token = tokenResult.Token!
         });
     }
 
     /// <summary>
-    /// Server-to-server callback invoked by TBC when a payment reaches a final status.
-    /// Per TBC's contract we must return HTTP 200 on receipt and verify the real status via
-    /// Get Payment rather than trusting the callback body. Finalization is idempotent.
+    /// Server-to-server callback Flitt POSTs to when an order changes status. We acknowledge
+    /// with HTTP 200, verify the signature against the purchase secret key, and finalize the
+    /// purchase on an approved status. Finalization is idempotent.
     /// </summary>
     [HttpPost("Callback")]
-    public async Task<IActionResult> Callback([FromBody] TbcCallbackPayload payload)
+    public async Task<IActionResult> Callback([FromBody] Dictionary<string, JsonElement>? body)
     {
-        if (payload is null || string.IsNullOrWhiteSpace(payload.PaymentId))
-            return Ok(); // acknowledge; nothing actionable
+        if (body is null || body.Count == 0) return Ok(); // acknowledge; nothing actionable
 
-        var payment = await db.Payments.FirstOrDefaultAsync(x => x.PayId == payload.PaymentId);
+        var parameters = FlittSignature.Flatten(body);
+
+        if (!flitt.VerifySignature(parameters))
+        {
+            logger.LogWarning("Flitt callback with invalid signature for order {OrderId}",
+                parameters.GetValueOrDefault("order_id"));
+            return Ok(); // never leak detail; just acknowledge
+        }
+
+        var orderId = parameters.GetValueOrDefault("order_id");
+        if (string.IsNullOrWhiteSpace(orderId)) return Ok();
+
+        var payment = await db.Payments.FirstOrDefaultAsync(x => x.MerchantPaymentId == orderId);
         if (payment is null)
         {
-            logger.LogWarning("TBC callback for unknown payId {PayId}", payload.PaymentId);
+            logger.LogWarning("Flitt callback for unknown order {OrderId}", orderId);
             return Ok();
         }
 
-        // Already finalized — acknowledge idempotently.
-        if (payment.Status is PaymentStatus.Succeeded or PaymentStatus.Failed
-            or PaymentStatus.Cancelled or PaymentStatus.Expired)
-            return Ok();
+        await ApplyOutcomeAsync(payment,
+            orderStatus: parameters.GetValueOrDefault("order_status"),
+            paymentId: parameters.GetValueOrDefault("payment_id"));
 
-        TbcPaymentResponse details;
-        try
+        return Ok();
+    }
+
+    /// <summary>
+    /// Lets the client poll the outcome of a payment by our order_id. Because the Flitt server
+    /// callback cannot reach a non-public host (e.g. localhost in development), this endpoint
+    /// also reconciles status directly with Flitt's order-status API while the payment is not
+    /// yet in a terminal state.
+    /// </summary>
+    [HttpGet("GetStatus")]
+    public async Task<IActionResult> GetStatus(string orderId)
+    {
+        var payment = await db.Payments.FirstOrDefaultAsync(x => x.MerchantPaymentId == orderId);
+        if (payment is null) return NotFound();
+
+        if (!IsFinal(payment.Status))
         {
-            details = await tbc.GetPaymentAsync(payload.PaymentId);
-        }
-        catch (TbcPaymentException ex)
-        {
-            // Leave the payment non-final so a later callback / poll can retry.
-            logger.LogError(ex, "Failed to fetch TBC payment {PayId} during callback", payload.PaymentId);
-            return Ok();
+            try
+            {
+                var order = await flitt.GetOrderStatusAsync(orderId);
+                if (order.ErrorCode is null && (order.SignatureValid || order.OrderStatus is not null))
+                {
+                    await ApplyOutcomeAsync(payment, order.OrderStatus, order.PaymentId);
+                }
+            }
+            catch (FlittPaymentException ex)
+            {
+                // Don't fail the poll on a transient lookup error — just return what we have.
+                logger.LogDebug(ex, "Order-status reconcile failed for {OrderId}", orderId);
+            }
         }
 
-        var status = tbc.MapStatus(details.Status);
-        payment.TbcStatus = details.Status;
+        return Ok(new
+        {
+            OrderId = payment.MerchantPaymentId,
+            payment.ServiceTokenId,
+            Status = payment.Status.ToString(),
+            payment.Amount,
+            payment.Currency
+        });
+    }
+
+    // ───── helpers ────────────────────────────────────────────────────────────
+
+    private static bool IsFinal(PaymentStatus s) =>
+        s is PaymentStatus.Succeeded or PaymentStatus.Failed
+          or PaymentStatus.Cancelled or PaymentStatus.Expired;
+
+    /// <summary>
+    /// Applies a Flitt order_status to the payment, finalizing the purchase on success.
+    /// Idempotent: once a payment is in a terminal state it is left untouched.
+    /// </summary>
+    private async Task ApplyOutcomeAsync(Payment payment, string? orderStatus, string? paymentId)
+    {
+        if (IsFinal(payment.Status)) return;
+
+        var status = flitt.MapStatus(orderStatus);
+        payment.ProviderStatus = orderStatus;
+        if (!string.IsNullOrEmpty(paymentId)) payment.PayId = paymentId;
         payment.UpdatedAt = DateTime.UtcNow;
 
         if (status == PaymentStatus.Succeeded)
@@ -138,28 +187,9 @@ public class PaymentController(
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            // A concurrent finalization won the race; that's fine — acknowledge anyway.
-            logger.LogWarning(ex, "Concurrent update finalizing payment {PayId}", payload.PaymentId);
+            // A concurrent finalization won the race; that's fine.
+            logger.LogWarning(ex, "Concurrent update finalizing order {OrderId}", payment.MerchantPaymentId);
         }
-
-        return Ok();
-    }
-
-    /// <summary>Lets the client poll the outcome of a payment by payId.</summary>
-    [HttpGet("GetStatus")]
-    public async Task<IActionResult> GetStatus(string payId)
-    {
-        var payment = await db.Payments.AsNoTracking().FirstOrDefaultAsync(x => x.PayId == payId);
-        if (payment is null) return NotFound();
-
-        return Ok(new
-        {
-            payment.PayId,
-            payment.ServiceTokenId,
-            Status = payment.Status.ToString(),
-            payment.Amount,
-            payment.Currency
-        });
     }
 
     /// <summary>

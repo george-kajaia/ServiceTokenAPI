@@ -5,7 +5,7 @@ using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Enums;
 using ServiceTokenApi.Hubs;
 using ServiceTokenApi.Options;
-using ServiceTokenApi.Services.Tbc;
+using ServiceTokenApi.Services.Flitt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,14 +52,12 @@ builder.Services
     .Bind(builder.Configuration.GetSection("GeneralOptions"))
     .ValidateOnStart();
 
-// ── TBC Bank E-Commerce payments ──────────────────────────────────────────────
-builder.Services.Configure<TbcOptions>(builder.Configuration.GetSection(TbcOptions.SectionName));
-builder.Services.AddSingleton<TbcTokenCache>();
-builder.Services.AddHttpClient<ITbcPaymentService, TbcPaymentService>((sp, client) =>
+// ── Flitt embedded-checkout payments ──────────────────────────────────────────
+builder.Services.Configure<FlittOptions>(builder.Configuration.GetSection(FlittOptions.SectionName));
+builder.Services.AddHttpClient<IFlittPaymentService, FlittPaymentService>((sp, client) =>
 {
-    var tbc = sp.GetRequiredService<IOptions<TbcOptions>>().Value;
-    client.BaseAddress = new Uri(tbc.BaseUrl);          // e.g. https://api.tbcbank.ge/v1/
-    client.DefaultRequestHeaders.Add("apikey", tbc.ApiKey);
+    var flitt = sp.GetRequiredService<IOptions<FlittOptions>>().Value;
+    client.BaseAddress = new Uri(flitt.BaseUrl);        // e.g. https://pay.flitt.com/api/
 });
 
 var app = builder.Build();
