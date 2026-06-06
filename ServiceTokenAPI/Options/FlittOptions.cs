@@ -34,9 +34,19 @@ namespace ServiceTokenApi.Options
 
         /// <summary>
         /// Page Flitt redirects to if a hard redirect is required (e.g. some 3-D Secure flows).
-        /// With the embedded checkout the buyer normally stays on the merchant page, so this is a fallback.
+        /// This should point at a backend endpoint (api/Payment/Return) — Flitt redirects there via
+        /// POST, which nginx cannot serve for the static SPA. The endpoint then bounces the browser
+        /// (as a GET) to <see cref="ClientReturnUrl"/>. With the embedded checkout the buyer normally
+        /// stays on the merchant page, so this whole path is only a fallback.
         /// </summary>
         public string ResponseUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The SPA result page the api/Payment/Return endpoint redirects the browser to (GET),
+        /// e.g. https://investor.service-tokens.com/payment/return. The order id is appended as a
+        /// query string so the page can poll the payment status.
+        /// </summary>
+        public string ClientReturnUrl { get; set; } = string.Empty;
 
         /// <summary>Order lifetime in seconds (how long the checkout token stays payable).</summary>
         public int LifetimeSeconds { get; set; } = 36000;

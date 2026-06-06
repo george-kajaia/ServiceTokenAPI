@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using ServiceTokenApi.DBContext;
 
 #nullable disable
@@ -11,9 +12,11 @@ using ServiceTokenApi.DBContext;
 namespace ServiceTokenApi.Migrations
 {
     [DbContext(typeof(ServiceTokenDbContext))]
-    partial class ServiceTokenDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260605120000_AllowSharedMerchantPaymentId")]
+    partial class AllowSharedMerchantPaymentId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -228,10 +231,6 @@ namespace ServiceTokenApi.Migrations
                     b.Property<string>("PayId")
                         .HasColumnType("text");
 
-                    b.Property<string>("ProviderStatus")
-                        .HasColumnType("text")
-                        .HasColumnName("TbcStatus");
-
                     b.Property<uint>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -244,6 +243,9 @@ namespace ServiceTokenApi.Migrations
 
                     b.Property<byte>("Status")
                         .HasColumnType("smallint");
+
+                    b.Property<string>("TbcStatus")
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -362,9 +364,6 @@ namespace ServiceTokenApi.Migrations
                     b.Property<byte>("OwnerType")
                         .HasColumnType("smallint");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("numeric");
-
                     b.Property<long>("ProductId")
                         .HasColumnType("bigint");
 
@@ -474,7 +473,7 @@ namespace ServiceTokenApi.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("Products");
+                            b1.ToTable("Products", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -508,7 +507,7 @@ namespace ServiceTokenApi.Migrations
 
                             b1.HasKey("ServiceTokenId");
 
-                            b1.ToTable("ServiceTokens");
+                            b1.ToTable("ServiceTokens", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("ServiceTokenId");

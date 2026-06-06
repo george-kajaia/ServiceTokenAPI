@@ -236,6 +236,7 @@ public class RequestController(
                     ProductId = request.ProductId,
                     StartDate = null,
                     EndDate = null,
+                    Price = product.Price,
                     Status = ServiceTokenStatus.Available,
                     RemainingCount = product.ServiceCount,
                     ServiceCount = product.ServiceCount,
