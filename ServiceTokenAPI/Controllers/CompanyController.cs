@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using ServiceTokenApi.DBContext;
 using ServiceTokenApi.Dto;
 using ServiceTokenApi.Entities;
+using ServiceTokenApi.Enums;
 using System.Net;
 using System.Net.Mime;
 using System.Numerics;
@@ -85,7 +86,15 @@ public class CompanyController(ServiceTokenDbContext db) : ControllerBase
             Mail = Company.Mail.Trim(),
             Phone = Company.Phone.Trim(),
 
-            User = new CompanyUser { UserName = Company.UserName, Password = hash }
+            Users = new List<CompanyUser>
+            {
+                new CompanyUser
+                {
+                    UserName = Company.UserName,
+                    Password = hash,
+                    UserType = CompanyUserType.Admin
+                }
+            }
         };
 
         db.Companies.Add(company);

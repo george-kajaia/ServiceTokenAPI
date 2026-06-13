@@ -7,8 +7,8 @@ namespace ServiceTokenApi.Entities
     {
         public long Id { get; set; }
 
-        [Timestamp] 
-        public uint RowVersion { get; set; }        
+        [Timestamp]
+        public uint RowVersion { get; set; }
 
         public byte Status { get; set; }
 
@@ -28,6 +28,6 @@ namespace ServiceTokenApi.Entities
 
         public string Phone { get; set; } = string.Empty;
 
-        public CompanyUser? User { get; set; }
+        public ICollection<CompanyUser> Users { get; set; } = new List<CompanyUser>();
     }
 }
